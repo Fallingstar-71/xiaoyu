@@ -1,0 +1,1820 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TRACE 轨迹实验室</title><style>html,body{margin:0}</style>
+<style>
+:root{--bg:#f5f6f8;--panel:#ffffff;--panel2:#f3f4f7;--line:#e4e6ec;--tx:#1c2030;--mut:#7a8095;--acc:#3556e0;--acc2:#3556e0;--acc-tx:#ffffff;--stage:#0a0b12;--danger:#d6414b;--shadow:0 12px 40px rgba(25,32,60,.16);color-scheme:light}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.45 "Noto Sans SC",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{white-space:nowrap;cursor:pointer;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 10px;transition:background .15s,border-color .15s}
+button:hover{border-color:var(--acc)}
+button.pri{background:var(--acc);color:var(--acc-tx);border-color:var(--acc);font-weight:600}
+button.pri:hover{filter:brightness(1.08)}
+button.ic{padding:4px 7px;min-width:28px}
+button.on{border-color:var(--acc);color:var(--acc)}
+button.dng:hover{border-color:var(--danger);color:var(--danger)}
+button:disabled{opacity:.4;cursor:default}
+input[type=text],input[type=number],select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 7px;min-width:0;max-width:100%}
+input[type=number]{width:72px}
+input[type=color]{width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer}
+input[type=range]{accent-color:var(--acc);width:100%;min-width:0}
+#app{display:grid;grid-template-rows:auto 1fr auto;height:100vh;height:100dvh}
+header{display:flex;align-items:center;gap:10px;padding:8px max(14px,env(safe-area-inset-left,0px));background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;line-height:1.1;margin-right:6px}
+.brand b{font:600 19px "Cinzel","Noto Serif SC",serif;letter-spacing:.28em;color:var(--tx)}
+.brand i{font-style:normal;font-size:10px;color:var(--mut);letter-spacing:.12em}
+#pname{width:170px;font-weight:600}
+.sp{flex:1}
+.grp{display:flex;gap:4px;align-items:center}
+main{display:grid;grid-template-columns:268px minmax(0,1fr) 300px;min-height:0}
+.side{background:var(--panel);display:flex;flex-direction:column;min-height:0;min-width:0}
+#left{border-right:1px solid var(--line)}#right{border-left:1px solid var(--line)}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;border:0;border-radius:0;background:none;padding:8px 4px;color:var(--mut);border-bottom:2px solid transparent}
+.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
+.pane{overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}
+.pane[hidden]{display:none}
+.center{display:grid;grid-template-rows:minmax(0,1fr) auto auto;min-width:0;min-height:0}
+#stagewrap{position:relative;background:var(--stage);display:flex;align-items:center;justify-content:center;min-height:0;overflow:hidden}
+#stage{display:block;box-shadow:0 0 0 1px var(--line);touch-action:none;cursor:crosshair}
+#stagebar{position:absolute;top:8px;left:8px;display:flex;gap:4px;flex-wrap:wrap;max-width:calc(100% - 16px)}
+#stagebar button{background:rgba(18,20,28,.78);color:#e1e5f0;border-color:#2c3042;backdrop-filter:blur(4px)}
+#stagebar button.on{border-color:#ffe3a3;color:#ffe3a3}
+#hint{position:absolute;bottom:8px;left:10px;color:#8a91a8;font-size:11px;pointer-events:none;max-width:70%}
+#transport{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--panel);border-top:1px solid var(--line);flex-wrap:wrap}
+#tcode{font:600 14px ui-monospace,Menlo,Consolas,monospace;min-width:96px;color:var(--acc)}
+#tl{background:var(--panel);border-top:1px solid var(--line);height:232px;display:grid;grid-template-columns:150px minmax(0,1fr);min-height:0;position:relative}
+#tlnames{overflow:hidden;border-right:1px solid var(--line);background:var(--panel)}
+#tlscroll{overflow:auto;position:relative}
+#tlinner{position:relative}
+.tlrow{height:26px;border-bottom:1px solid var(--line);position:relative}
+.tlname{height:26px;border-bottom:1px solid var(--line);padding:0 8px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;cursor:pointer}
+.tlname.sel,.tlrow.sel{background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.tlname i{width:9px;height:9px;border-radius:50%;flex:none}
+#ruler{touch-action:none;height:24px;position:sticky;top:0;z-index:5;background:var(--panel2);border-bottom:1px solid var(--line);cursor:ew-resize}
+#ruler span{position:absolute;top:4px;font-size:10px;color:var(--mut);transform:translateX(3px);pointer-events:none}
+#ruler s{position:absolute;bottom:0;width:1px;height:7px;background:var(--mut)}
+.bar{touch-action:none;position:absolute;top:5px;height:16px;border-radius:4px;opacity:.55;cursor:grab}
+.bar.sel{opacity:.85}
+.bar .h{position:absolute;top:0;bottom:0;width:6px;cursor:ew-resize}
+.bar .h.l{left:0}.bar .h.r{right:0}
+.kf{position:absolute;top:8px;width:10px;height:10px;margin-left:-5px;transform:rotate(45deg);background:var(--panel);border:1.5px solid var(--tx);touch-action:none;cursor:ew-resize;z-index:2}
+.kf.on{background:var(--acc)}
+.mk{touch-action:none;position:absolute;top:4px;margin-left:-6px;width:12px;height:18px;border-radius:3px;background:var(--acc);cursor:ew-resize;z-index:2}
+#phead{position:absolute;top:0;bottom:0;width:2px;background:#ff5a6a;z-index:6;pointer-events:none}
+#phead:before{content:"";position:absolute;top:0;left:-5px;border:6px solid transparent;border-top-color:#ff5a6a}
+.endmark{position:absolute;top:5px;width:10px;height:16px;border-radius:3px;background:#ddd;opacity:.8;margin-left:-1px}
+footer{display:flex;gap:14px;align-items:center;padding:4px 14px;background:var(--panel);border-top:1px solid var(--line);color:var(--mut);font-size:11px;flex-wrap:wrap}
+footer .cr{margin-left:auto;letter-spacing:.08em}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.card h4{margin:0;font-size:12px;color:var(--mut);font-weight:600;letter-spacing:.06em}
+.f{display:grid;grid-template-columns:76px minmax(0,1fr) 40px;align-items:center;gap:6px}
+.f.s{grid-template-columns:76px minmax(0,1fr)}
+.f span{color:var(--mut);font-size:12px}
+.f b{font-weight:400;font-size:11px;color:var(--mut);text-align:right}
+.f.chk{grid-template-columns:auto 1fr;justify-content:start}
+.chlist{display:flex;flex-direction:column;gap:3px}
+.chi{display:flex;align-items:center;gap:6px;padding:5px 6px;border:1px solid transparent;border-radius:7px;cursor:pointer}
+.chi:hover{background:var(--panel2)}.chi.sel{border-color:var(--acc);background:var(--panel2)}
+.chi.dragover{border-top:2px solid var(--acc)}
+.chi .dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+.chi .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chi button{padding:1px 5px;border:0;background:none;color:var(--mut)}
+.chi button:hover{color:var(--acc)}
+.chi.off .nm{opacity:.4;text-decoration:line-through}
+.mut{color:var(--mut)}
+.small{font-size:11px}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--shadow);z-index:50;display:flex;flex-direction:column;transform:translateX(102%);transition:transform .22s,visibility .22s;visibility:hidden;box-shadow:none}
+.drawer.open{transform:none;visibility:visible;box-shadow:var(--shadow)}
+.drawer.wide{width:min(720px,100vw)}
+.drawer>header{padding:10px 14px;border-bottom:1px solid var(--line)}
+.drawer>header h3{margin:0;font-size:15px;flex:1}
+.dbody{overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;flex:1;min-height:0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(760px,100%);max-height:94vh;overflow:auto;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.mbox>header{border-bottom:1px solid var(--line)}
+.mbox h3{margin:0;flex:1;font-size:15px}
+.mbody{padding:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:700px){.mbody{grid-template-columns:1fr}}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button.on{background:var(--acc);color:var(--acc-tx);border-color:var(--acc)}
+.fontgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.fcard{border:1px solid var(--line);border-radius:8px;padding:8px;cursor:pointer;background:var(--panel2);display:flex;flex-direction:column;gap:2px}
+.fcard:hover{border-color:var(--acc)}.fcard.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.fcard .pv{font-size:22px;line-height:1.2;white-space:nowrap;overflow:hidden}
+.fcard small{color:var(--mut);font-size:10px}
+.pal{display:flex;flex-direction:column;gap:3px;padding:6px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--panel2)}
+.pal:hover{border-color:var(--acc)}
+.pal div{display:flex;height:16px;border-radius:4px;overflow:hidden}.pal div i{flex:1}
+.palgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+.tpl{border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;background:var(--panel2);display:flex;flex-direction:column}
+.tpl:hover{border-color:var(--acc)}
+.tpl canvas{width:100%;display:block;background:#05050a}
+.tpl div{padding:6px 8px}.tpl b{display:block}.tpl span{color:var(--mut);font-size:11px}
+.tplgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.prog{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .1s}
+#xprev{width:100%;background:#05050a;border:1px solid var(--line);border-radius:8px;display:block}
+#xvideo{width:100%;border-radius:8px;background:#000;display:block}
+.stops{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.stops .sw{display:flex;align-items:center;gap:2px}
+.toast{position:fixed;left:50%;bottom:48px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--acc);padding:8px 14px;border-radius:8px;z-index:90;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+.toast.show{opacity:1}
+
+button{border-radius:8px;background:var(--panel);}
+.card{background:var(--panel);border:1px solid var(--line)}
+.pane{background:var(--bg)}
+.chi:hover{background:var(--panel2)}.chi.sel{background:var(--panel);box-shadow:0 0 0 1.5px var(--acc)}
+.tlname.sel,.tlrow.sel{background:color-mix(in srgb,var(--acc) 7%,transparent)}
+.fcard,.pal,.tpl{background:var(--panel)}
+.seg button.on,.tabs button.on{color:var(--acc)}
+.seg button.on{background:color-mix(in srgb,var(--acc) 12%,#fff);color:var(--acc);border-color:var(--acc)}
+.pri.on{color:#fff}
+#mnav{display:none}
+.stage-fs{display:none}
+/* ---- tablet / phone ---- */
+@media (max-width:1100px){
+  body{overflow:hidden}
+  #app{height:100vh;height:100dvh}
+  main{display:flex;flex-direction:column;min-height:0}
+  #left,#right{display:none;flex:1;border:0;min-height:0}
+  .center{display:contents}
+  #stagewrap{flex:none;height:42dvh;min-height:210px;order:-1}
+  header{order:-2}
+  #transport,#tl{display:none}
+  body[data-m="tl"] #transport{display:flex}
+  body[data-m="tl"] #tl{display:grid;flex:1;height:auto;min-height:150px}
+  body[data-m="left"] #left{display:flex}
+  body[data-m="right"] #right{display:flex}
+  body[data-m="tl"] #transport{order:2}body[data-m="tl"] #tl{order:3}
+  #mnav{display:flex;border-top:1px solid var(--line);background:var(--panel);padding-bottom:env(safe-area-inset-bottom,0px)}
+  #mnav button{flex:1;border:0;border-radius:0;background:none;padding:10px 4px;color:var(--mut)}
+  #mnav button.on{color:var(--acc);font-weight:600;box-shadow:inset 0 2px 0 var(--acc)}
+  #app{grid-template-rows:auto 1fr auto auto}
+  #hint{display:none}
+  .brand i{display:none}
+  header{gap:6px;padding-top:6px;padding-bottom:6px}
+  #pname{width:130px}
+  footer{display:none}
+  .drawer{width:100vw}
+}
+@media (max-width:640px){
+  header .grp:has(#aspect) span,header .grp:has(#dur) span:last-child{display:none}
+  #bFont,#bColor{display:none}
+  #tcode{min-width:0;font-size:12px}
+  #transport{gap:5px;padding:6px 8px}
+  #tzoomwrap{display:none}
+  #tl{grid-template-columns:92px minmax(0,1fr)!important}
+  .f{grid-template-columns:70px minmax(0,1fr) 38px}
+  button,select,input{font-size:14px}
+  #stagebar button{padding:3px 7px;font-size:12px}
+}
+@media (min-width:1101px) and (max-width:1300px){main{grid-template-columns:230px minmax(0,1fr) 270px}}
+
+</style></head><body>
+<div id="app">
+<header>
+  <div class="brand"><b>TRACE</b><i>人物轨迹实验室 · 让每个人的故事，都有自己的轨迹</i></div>
+  <input id="pname" type="text" aria-label="项目名称">
+  <div class="grp"><button class="ic" id="bUndo" title="撤销 Ctrl+Z">↶</button><button class="ic" id="bRedo" title="重做 Ctrl+Shift+Z">↷</button></div>
+  <div class="grp"><span class="mut small">画幅</span><select id="aspect"><option>16:9</option><option>9:16</option><option>1:1</option><option>4:3</option><option>3:4</option><option>21:9</option></select></div>
+  <div class="grp"><span class="mut small">总时长</span><input id="dur" type="number" min="3" max="300" step="1"><span class="mut small">秒</span></div>
+  <div class="sp"></div>
+  <div class="grp">
+    <button id="bTpl">模板 / 项目</button>
+    <button id="bFont">字体与文字</button>
+    <button id="bColor">配色系统</button>
+    <button class="pri" id="bExport">导出视频</button>
+  </div>
+</header>
+<main>
+  <section class="side" id="left">
+    <div class="tabs" id="ltabs"><button data-t="chars" class="on">角色</button><button data-t="events">事件</button><button data-t="texts">文字</button></div>
+    <div class="pane" id="p-chars"></div>
+    <div class="pane" id="p-events" hidden></div>
+    <div class="pane" id="p-texts" hidden></div>
+  </section>
+  <section class="center">
+    <div id="stagewrap">
+      <canvas id="stage"></canvas>
+      <div id="stagebar">
+        <button id="mSel" class="on" title="选择/拖动控制点；双击空白处添加控制点">选择</button>
+        <button id="mDraw" title="按住鼠标在画布上自由绘制所选角色的轨迹">绘制轨迹</button>
+        <button id="mEvt" title="点击所选轨迹上的位置，添加事件节点">事件节点</button>
+        <button id="mCam" title="用最终相机预览（跟随/拉远）；关闭则为自由编辑视角">相机预览</button>
+        <button id="mFit" title="适配全部轨迹">适配</button>
+        <button id="mEdit" class="on" title="显示/隐藏编辑辅助线（不会导出）">辅助线</button>
+      </div>
+      <div id="hint"></div>
+    </div>
+    <div id="transport">
+      <button class="ic" id="bStart" title="回到开头">⏮</button>
+      <button class="ic" id="bPrev" title="上一帧 ←">◀︎|</button>
+      <button class="pri" id="bPlay" style="min-width:64px">▶ 播放</button>
+      <button class="ic" id="bNext" title="下一帧 →">|▶︎</button>
+      <span id="tcode">0.0 / 30.0</span>
+      <label class="row small mut">速度<select id="spd"><option value=".25">0.25×</option><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+      <label class="row small mut"><input type="checkbox" id="loop" checked>循环</label>
+      <span class="sp"></span>
+      <button id="bAddKf" title="在当前时间给所选角色插入一个控制点（关键帧）">＋关键帧</button>
+      <label class="row small mut" id="tzoomwrap">缩放<input id="tzoom" type="range" min="10" max="160" value="40" style="width:110px"></label>
+    </div>
+    <div id="tl"><div id="tlnames"></div><div id="tlscroll"><div id="tlinner"><div id="ruler"></div><div id="tlrows"></div><div id="phead"></div></div></div></div>
+  </section>
+  <section class="side" id="right">
+    <div class="tabs" id="rtabs"><button data-t="path" class="on">轨迹</button><button data-t="look">外观</button><button data-t="txt">文字</button></div>
+    <div class="pane" id="r-path"></div>
+    <div class="pane" id="r-look" hidden></div>
+    <div class="pane" id="r-txt" hidden></div>
+  </section>
+</main>
+<nav id="mnav"><button data-m="tl" class="on">时间轴</button><button data-m="left">角色</button><button data-m="right">属性</button><button data-act="mFont">字体</button><button data-act="openColor">配色</button></nav>
+<footer><span id="status">就绪</span><span id="saved" class="mut"></span><span class="cr" id="credit">TRACE · 创作者：鱼是有了你</span></footer>
+</div>
+<aside class="drawer wide" id="dFont"></aside>
+<aside class="drawer" id="dColor"></aside>
+<aside class="drawer" id="dTpl"></aside>
+<aside class="drawer" id="dRel"></aside>
+<div class="modal" id="mExport"><div class="mbox" id="xbox"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileProj" accept=".json,application/json" hidden>
+<input type="file" id="fileFont" accept=".ttf,.otf,.woff,.woff2" hidden>
+
+<script>
+/* ============ TRACE core: math, colour, fonts, data model, path sampling ============ */
+'use strict';
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2, 9);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+const deep = o => JSON.parse(JSON.stringify(o));
+const fmtTime = t => { t = Math.max(0, t); const m = Math.floor(t / 60), s = t - m * 60; return (m ? m + ':' : '') + (m ? s.toFixed(1).padStart(4, '0') : s.toFixed(1)) + (m ? '' : 's'); };
+
+/* ---- colour helpers ---- */
+function hex2rgb(h) {
+  h = String(h || '#ffffff').replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const n = parseInt(h.slice(0, 6), 16);
+  return isNaN(n) ? [255, 255, 255] : [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+const rgb2hex = (r, g, b) => '#' + [r, g, b].map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
+function rgb2hsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2;
+  if (mx !== mn) {
+    const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60;
+  }
+  return [h, s, l];
+}
+function hsl2rgb(h, s, l) {
+  h = ((h % 360) + 360) % 360 / 360;
+  if (s === 0) return [l * 255, l * 255, l * 255];
+  const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  const f = t => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+  return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255];
+}
+const hsl2hex = (h, s, l) => rgb2hex(...hsl2rgb(h, s, l));
+const mixRgb = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+const rgba = (c, a) => `rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${clamp(a, 0, 1).toFixed(3)})`;
+function tweakRgb(c, bright, sat) {
+  if (bright === 1 && sat === 1) return c;
+  let [h, s, l] = rgb2hsl(c[0], c[1], c[2]);
+  s = clamp(s * sat, 0, 1); l = clamp(l * bright, 0, 1);
+  return hsl2rgb(h, s, l);
+}
+
+/* ---- fonts ---- */
+const STACKS = {
+  serif: '"Noto Serif CJK SC","Source Han Serif SC","Songti SC","STSong","SimSun",serif',
+  sans: '"Noto Sans CJK SC","Source Han Sans SC","PingFang SC","Microsoft YaHei",sans-serif',
+  kai: '"KaiTi","Kaiti SC","STKaiti","BiauKai",serif',
+  fang: '"FangSong","STFangsong","FangSong_GB2312","Noto Serif CJK SC",serif',
+  hand: '"Ma Shan Zheng","Kaiti SC","KaiTi",cursive',
+  latin: 'Georgia,"Times New Roman",serif',
+  mini: 'system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif',
+};
+const FONT_LIB = [
+  { id: 'noto-serif', label: '思源宋体', cat: '宋体', family: 'Noto Serif SC', stack: 'serif', gf: 'Noto+Serif+SC:wght@200;300;400;500;600;700;900', weights: [200, 300, 400, 500, 600, 700, 900], lic: 'OFL，可商用' },
+  { id: 'songti', label: '系统宋体', cat: '宋体', family: 'Songti SC', stack: 'serif', weights: [400, 700], lic: '系统自带，导出前确认授权', system: true },
+  { id: 'noto-sans', label: '思源黑体', cat: '黑体', family: 'Noto Sans SC', stack: 'sans', gf: 'Noto+Sans+SC:wght@100;300;400;500;700;900', weights: [100, 300, 400, 500, 700, 900], lic: 'OFL，可商用' },
+  { id: 'wenkai', label: '霞鹜文楷（楷体）', cat: '楷体', family: 'LXGW WenKai TC', stack: 'kai', gf: 'LXGW+WenKai+TC:wght@300;400;700', weights: [300, 400, 700], lic: 'OFL，可商用' },
+  { id: 'kaiti', label: '系统楷体', cat: '楷体', family: 'KaiTi', stack: 'kai', weights: [400], lic: '系统自带，导出前确认授权', system: true },
+  { id: 'fangsong', label: '仿宋（系统）', cat: '仿宋', family: 'FangSong', stack: 'fang', weights: [400], lic: '系统自带，导出前确认授权', system: true },
+  { id: 'mashan', label: '马善政楷书', cat: '手写体', family: 'Ma Shan Zheng', stack: 'hand', gf: 'Ma+Shan+Zheng', weights: [400], lic: 'OFL，可商用' },
+  { id: 'zhimang', label: '志莽行书', cat: '手写体', family: 'Zhi Mang Xing', stack: 'hand', gf: 'Zhi+Mang+Xing', weights: [400], lic: 'OFL，可商用' },
+  { id: 'liujian', label: '流江毛草', cat: '手写体', family: 'Liu Jian Mao Cao', stack: 'hand', gf: 'Liu+Jian+Mao+Cao', weights: [400], lic: 'OFL，可商用' },
+  { id: 'longcang', label: '龙藏体', cat: '手写体', family: 'Long Cang', stack: 'hand', gf: 'Long+Cang', weights: [400], lic: 'OFL，可商用' },
+  { id: 'cinzel', label: 'Cinzel', cat: '英文', family: 'Cinzel', stack: 'latin', gf: 'Cinzel:wght@400;600', weights: [400, 600], lic: 'OFL，可商用' },
+  { id: 'cormorant', label: 'Cormorant Garamond', cat: '英文', family: 'Cormorant Garamond', stack: 'latin', gf: 'Cormorant+Garamond:wght@300;400;600', weights: [300, 400, 600], lic: 'OFL，可商用' },
+  { id: 'georgia', label: 'Georgia', cat: '英文', family: 'Georgia', stack: 'latin', weights: [400, 700], lic: '系统自带', system: true },
+  { id: 'inter', label: 'Inter', cat: '极简', family: 'Inter', stack: 'mini', gf: 'Inter:wght@300;400;600', weights: [300, 400, 600], lic: 'OFL，可商用' },
+  { id: 'roboto', label: 'Roboto', cat: '极简', family: 'Roboto', stack: 'mini', gf: 'Roboto:wght@300;400;700', weights: [300, 400, 700], lic: 'Apache-2.0，可商用' },
+];
+const UPLOADED = []; // {id,label,family,cat:'我的字体',stack:'serif',weights:[400]}
+const allFonts = () => FONT_LIB.concat(UPLOADED);
+function fontByFamily(fam) { return allFonts().find(f => f.family === fam); }
+function cssFamily(fam) {
+  const f = fontByFamily(fam);
+  return `"${fam}",${STACKS[f ? f.stack : 'serif']}`;
+}
+function loadGoogleFonts() {
+  FONT_LIB.forEach(f => {
+    if (!f.gf) return;
+    const l = document.createElement('link'); l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=' + f.gf + '&display=swap';
+    l.onerror = () => { };
+    document.head.appendChild(l);
+  });
+}
+
+const DEFAULT_FONT = () => ({
+  family: 'Noto Serif SC', size: 24, weight: 400, color: '#e9edf6', spacing: 1, lineHeight: 1.25, opacity: 1, rotate: 0, dx: 0, dy: 0,
+  glow: { on: false, color: '#9fd0ff', blur: 10 }, shadow: { on: true, color: '#000000', blur: 6, dx: 1, dy: 1 }, vertical: false,
+});
+const mkFont = (o = {}) => { const f = DEFAULT_FONT(); for (const k in o) { if (typeof o[k] === 'object' && o[k] && f[k]) Object.assign(f[k], o[k]); else f[k] = o[k]; } return f; };
+const FONT_ROLES = { name: '人物姓名', event: '事件节点', time: '时间标记', title: '视频标题', subtitle: '副标题', memorial: '纪念文字（墓碑）' };
+const DEFAULT_FONT_STYLES = () => ({
+  name: mkFont({ size: 26, weight: 400, spacing: 2 }),
+  event: mkFont({ size: 22, family: 'Noto Serif SC', weight: 300, color: '#f1e7c8', spacing: 3, glow: { on: true, color: '#ffe9a8', blur: 12 } }),
+  time: mkFont({ size: 16, family: 'Noto Sans SC', weight: 300, color: '#9aa4bd', spacing: 2, shadow: { on: false, color: '#000', blur: 0, dx: 0, dy: 0 } }),
+  title: mkFont({ size: 64, weight: 300, spacing: 14, color: '#f4f6fb', glow: { on: true, color: '#9fd0ff', blur: 18 } }),
+  subtitle: mkFont({ size: 26, weight: 300, spacing: 8, color: '#b9c2d8' }),
+  memorial: mkFont({ size: 22, weight: 500, color: '#d6dae4', spacing: 2, shadow: { on: false, color: '#000', blur: 0, dx: 0, dy: 0 } }),
+});
+const FONT_PRESETS = {
+  '电影叙事风': { name: { family: 'Noto Serif SC', weight: 300, size: 28, spacing: 6, color: '#eef1f8', opacity: .95 }, event: { family: 'Noto Serif SC', weight: 300, spacing: 8 }, title: { family: 'Noto Serif SC', weight: 200, spacing: 22, size: 68 }, subtitle: { family: 'Noto Serif SC', weight: 300, spacing: 10 }, memorial: { family: 'Noto Serif SC', weight: 400 } },
+  '古风文学风': { name: { family: 'LXGW WenKai TC', weight: 400, size: 28, spacing: 4, color: '#f2ead3' }, event: { family: 'LXGW WenKai TC', weight: 400, spacing: 5, color: '#f2ead3' }, title: { family: 'Ma Shan Zheng', weight: 400, spacing: 10, size: 72, color: '#f2ead3' }, subtitle: { family: 'LXGW WenKai TC', weight: 300, spacing: 8 }, memorial: { family: 'LXGW WenKai TC', weight: 700 } },
+  '极简高级风': { name: { family: 'Noto Sans SC', weight: 100, size: 24, spacing: 5, opacity: .75, color: '#ffffff' }, event: { family: 'Noto Sans SC', weight: 100, spacing: 6, opacity: .8, glow: { on: false } }, title: { family: 'Noto Sans SC', weight: 100, spacing: 18, size: 60, glow: { on: false } }, subtitle: { family: 'Noto Sans SC', weight: 100, spacing: 10, opacity: .7 }, memorial: { family: 'Noto Sans SC', weight: 300 } },
+  '暗黑史诗风': { name: { family: 'Noto Serif SC', weight: 700, size: 28, spacing: 3, color: '#e8d9b0', glow: { on: true, color: '#ff9a4a', blur: 14 } }, event: { family: 'Cinzel', weight: 600, spacing: 4, color: '#e8d9b0', glow: { on: true, color: '#ff9a4a', blur: 16 } }, title: { family: 'Noto Serif SC', weight: 900, spacing: 12, size: 70, color: '#e8d9b0', glow: { on: true, color: '#ff7a2a', blur: 24 } }, subtitle: { family: 'Noto Serif SC', weight: 500, spacing: 8, color: '#c9b890' }, memorial: { family: 'Noto Serif SC', weight: 700, color: '#e8d9b0' } },
+  '未来科技风': { name: { family: 'Inter', weight: 300, size: 22, spacing: 4, color: '#bfeaff', glow: { on: true, color: '#4fd0ff', blur: 10 } }, event: { family: 'Inter', weight: 400, spacing: 5, color: '#bfeaff', glow: { on: true, color: '#4fd0ff', blur: 12 } }, title: { family: 'Inter', weight: 300, spacing: 16, size: 60, color: '#e8fbff', glow: { on: true, color: '#4fd0ff', blur: 22 } }, subtitle: { family: 'Inter', weight: 300, spacing: 8, color: '#8fd8f0' }, memorial: { family: 'Inter', weight: 400, color: '#bfeaff' } },
+};
+
+/* ---- font loading (canvas needs fonts ready before it measures/draws) ---- */
+function fontSpecString(f, sizeOverride) {
+  return `${f.weight} ${sizeOverride || f.size}px ${cssFamily(f.family)}`;
+}
+async function ensureFonts(P, extraText = '') {
+  if (!document.fonts || !document.fonts.load) return;
+  const jobs = new Map();
+  const add = (f, text) => {
+    const key = f.family + '|' + f.weight;
+    jobs.set(key, (jobs.get(key) || '') + text);
+  };
+  const names = P.chars.map(c => c.name).join('');
+  const all = Object.values(P.fontStyles);
+  all.forEach(f => add(f, names + P.texts.map(t => t.text).join('') + P.events.map(e => (e.text || '') + (e.time || '')).join('') + '0123456789:.' + extraText));
+  P.texts.forEach(t => t.font && add(t.font, t.text));
+  Object.values(P.profiles).forEach(pr => { if (pr.label.override) add(pr.label.font, names); });
+  const ps = [];
+  jobs.forEach((text, key) => {
+    const [fam, w] = key.split('|');
+    const uniq = [...new Set(text)].join('');
+    ps.push(Promise.race([document.fonts.load(`${w} 24px ${cssFamily(fam)}`, uniq).catch(() => { }), new Promise(r => setTimeout(r, 6000))]));
+  });
+  await Promise.all(ps);
+}
+
+/* ---- project model ---- */
+const ASPECTS = { '16:9': [1920, 1080], '9:16': [1080, 1920], '1:1': [1080, 1080], '4:3': [1440, 1080], '3:4': [1080, 1440], '21:9': [2520, 1080] };
+const DEFAULT_PROFILE = (hex = '#ffffff') => ({
+  colorLocked: false,
+  color: { mode: 'solid', stops: [{ o: 0, c: hex }, { o: 1, c: hex }], angle: 0, alpha: 1, brightness: 1, saturation: 1 },
+  line: { width: 2.4, headSize: 5, headColor: '', innerColor: '' },
+  glow: { follow: true, color: hex, intensity: .8, radius: 1, opacity: 1 },
+  tail: { len: 6, fade: 1, color: hex, mix: 0, floor: .16 },
+  particles: { follow: true, color: hex, density: 1, flicker: .5 },
+  meetColor: '', endColor: '',
+  label: { show: true, override: false, font: DEFAULT_FONT(), followColor: true, dx: null, dy: null },
+});
+function newProject() {
+  return {
+    v: 1, name: '未命名轨迹', aspect: '16:9', w: 1920, h: 1080, fps: 30, duration: 30,
+    bg: { mode: 'gradient', c1: '#07070e', c2: '#16111a' }, stars: true, grid: true, vignette: true,
+    camera: { follow: null, ox: -290, oy: 0, cx: 960, cy: 540, zoom: 1, pullOn: false, pullStart: 20, pullEnd: 28, pullZoom: .6, pullCx: null, pullCy: null },
+    fx: { graves: true, gates: true, events: true, labels: true, particles: true, texts: true }, fontStyles: DEFAULT_FONT_STYLES(), chars: [], profiles: {}, events: [], texts: [],
+  };
+}
+function newChar(P, name, hex, x, y, t0 = 0) {
+  const id = uid();
+  const ch = { id, name, t0, style: 'curve', amp: 22, freq: .45, path: [{ t: t0, x, y }, { t: t0 + 10, x: x + 600, y: y - 160 }], end: { type: 'continue', ts: 0, te: 0, ret: [] }, hidden: false, locked: false };
+  P.chars.push(ch); P.profiles[id] = DEFAULT_PROFILE(hex);
+  return ch;
+}
+const charById = (P, id) => P.chars.find(c => c.id === id);
+
+/* ---- path sampling ---- */
+function pchip(ts, vs) {
+  const n = ts.length, d = new Array(n);
+  if (n === 1) return { at: () => vs[0] };
+  const h = [], del = [];
+  for (let i = 0; i < n - 1; i++) { h[i] = ts[i + 1] - ts[i] || 1e-6; del[i] = (vs[i + 1] - vs[i]) / h[i]; }
+  if (n === 2) { d[0] = d[1] = del[0]; }
+  else {
+    for (let i = 1; i < n - 1; i++) {
+      if (del[i - 1] * del[i] <= 0) d[i] = 0;
+      else { const w1 = 2 * h[i] + h[i - 1], w2 = h[i] + 2 * h[i - 1]; d[i] = (w1 + w2) / (w1 / del[i - 1] + w2 / del[i]); }
+    }
+    const end = (h0, h1, d0, d1) => { let r = ((2 * h0 + h1) * d0 - h0 * d1) / (h0 + h1); if (Math.sign(r) !== Math.sign(d0)) r = 0; else if (Math.sign(d0) !== Math.sign(d1) && Math.abs(r) > 3 * Math.abs(d0)) r = 3 * d0; return r; };
+    d[0] = end(h[0], h[1], del[0], del[1]);
+    d[n - 1] = end(h[n - 2], h[n - 3], del[n - 2], del[n - 3]);
+  }
+  return {
+    at(t) {
+      let lo = 0, hi = n - 1;
+      if (t <= ts[0]) return vs[0]; if (t >= ts[n - 1]) return vs[n - 1];
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (ts[m] > t) hi = m; else lo = m; }
+      const hh = ts[hi] - ts[lo], s = (t - ts[lo]) / hh, s2 = s * s, s3 = s2 * s;
+      return (2 * s3 - 3 * s2 + 1) * vs[lo] + (s3 - 2 * s2 + s) * hh * d[lo] + (-2 * s3 + 3 * s2) * vs[hi] + (s3 - s2) * hh * d[hi];
+    }
+  };
+}
+function linearSeries(ts, vs) {
+  const n = ts.length;
+  return { at(t) { if (n === 1 || t <= ts[0]) return vs[0]; if (t >= ts[n - 1]) return vs[n - 1]; let i = 1; while (ts[i] < t) i++; const s = (t - ts[i - 1]) / ((ts[i] - ts[i - 1]) || 1e-6); return lerp(vs[i - 1], vs[i], s); } };
+}
+/* Returns an object with pos(t) -> [x,y], plus head/trail visibility info for a character. Cached by JSON signature. */
+function buildTrack(ch) {
+  const pts = ch.path.slice().sort((a, b) => a.t - b.t);
+  if (!pts.length) pts.push({ t: ch.t0, x: 0, y: 0 });
+  const T = pts.map(p => p.t), X = pts.map(p => p.x), Y = pts.map(p => p.y);
+  let fx, fy;
+  const style = ch.style;
+  if (style === 'curve' || style === 'wave') { fx = pchip(T, X); fy = pchip(T, Y); }
+  else if (style === 'straight') { const a = pts[0], b = pts[pts.length - 1]; fx = linearSeries([a.t, b.t], [a.x, b.x]); fy = linearSeries([a.t, b.t], [a.y, b.y]); }
+  else { fx = linearSeries(T, X); fy = linearSeries(T, Y); }
+  const tl = T[T.length - 1];
+  const nT = T.length;
+  let vx = 0, vy = 0;
+  if (nT >= 2) { const dt = Math.max(.05, T[nT - 1] - T[nT - 2]); vx = (X[nT - 1] - X[nT - 2]) / dt; vy = (Y[nT - 1] - Y[nT - 2]) / dt; }
+  const e = ch.end || { type: 'continue' };
+  const base0 = t => {
+    let x = fx.at(t), y = fy.at(t);
+    if (t > tl && (e.type === 'continue' || e.type === 'fade')) { x += vx * (t - tl); y += vy * (t - tl); }
+    return [x, y];
+  };
+  const base = style === 'wave' ? t => {
+    const [x, y] = base0(t), [x2, y2] = base0(t + .05); let dx = x2 - x, dy = y2 - y; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+    const env = smooth((t - pts[0].t) / 2) * ch.amp * Math.sin(t * ch.freq * Math.PI * 2);
+    return [x - dy * env, y + dx * env];
+  } : base0;
+  const vel = (f, t) => { const a = f(t - .03), b = f(t + .03); return [(b[0] - a[0]) / .06, (b[1] - a[1]) / .06]; };
+  const dur = e.te > e.ts ? e.te - e.ts : 1;
+  let pos = base, door = null;
+  if (e.type === 'grave' || e.type === 'door') {
+    const p0 = base(e.ts), v = vel(base, e.ts);
+    const fin = [p0[0] + v[0] * dur / 2, p0[1] + v[1] * dur / 2];
+    pos = t => { if (t <= e.ts) return base(t); const s = Math.min((t - e.ts) / dur, 1); return [p0[0] + v[0] * dur * (s - s * s / 2), p0[1] + v[1] * dur * (s - s * s / 2)]; };
+    door = fin;
+    if (e.type === 'door' && e.ret && e.ret.length) {
+      const R = [{ t: e.ret[0].t, x: fin[0], y: fin[1] }].concat(e.ret.slice(1)).sort((a, b) => a.t - b.t);
+      const rx = pchip(R.map(p => p.t), R.map(p => p.x)), ry = pchip(R.map(p => p.t), R.map(p => p.y));
+      const prev = pos;
+      pos = t => t >= R[0].t ? [rx.at(t), ry.at(t)] : prev(t);
+    }
+  } else if (e.type === 'fade') {
+    const p0 = base(e.ts), v = vel(base, e.ts);
+    pos = t => t <= e.ts ? base(t) : [p0[0] + v[0] * (t - e.ts) * .55, p0[1] + v[1] * (t - e.ts) * .55];
+  }
+  /* segments: time ranges in which the line exists */
+  const segs = [];
+  const retStart = (e.type === 'door' && e.ret && e.ret.length) ? e.ret[0].t : null;
+  if (e.type === 'grave' || e.type === 'door') segs.push([ch.t0, e.te]); else segs.push([ch.t0, 1e9]);
+  if (retStart != null) segs.push([retStart, 1e9]);
+  const headA = t => {
+    if (t < ch.t0) return 0;
+    let a = smooth((t - ch.t0) / .9);
+    if (e.type === 'grave') { if (t > e.te) return 0; a *= t < e.te - 1.6 ? 1 : clamp((e.te - t) / 1.6, 0, 1); }
+    else if (e.type === 'fade') a *= 1 - smooth((t - e.ts) / Math.max(.1, e.te - e.ts));
+    else if (e.type === 'door') {
+      if (retStart != null && t >= retStart) a = smooth((t - retStart) / 1.0);
+      else { if (t > e.te) return 0; a *= t < e.te - 1 ? 1 : clamp((e.te - t) / 1, 0, 1); }
+    }
+    return a;
+  };
+  const trailMult = t => e.type === 'fade' ? 1 - .88 * smooth((t - e.ts) / Math.max(.1, e.te - e.ts)) : 1;
+  return { pos, headA, segs, trailMult, door, end: e };
+}
+
+/* ---- project-level derived caches (tracks, bounding box) ---- */
+const TRACKS = new Map();
+function trackFor(ch) {
+  const sig = JSON.stringify([ch.path, ch.style, ch.amp, ch.freq, ch.t0, ch.end]);
+  const c = TRACKS.get(ch.id);
+  if (c && c.sig === sig) return c.tr;
+  const tr = buildTrack(ch); tr.sig = sig; TRACKS.set(ch.id, { sig, tr }); return tr;
+}
+function autoBounds(P) {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  P.chars.forEach(ch => {
+    if (ch.hidden) return;
+    const tr = trackFor(ch);
+    for (let t = ch.t0; t <= P.duration; t += .5) { if (tr.headA(t) <= 0 && t > ch.t0 + 1) { if (ch.end.type === 'grave') break; } const p = tr.pos(t); x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]); x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]); }
+  });
+  if (x0 > x1) return { cx: 960, cy: 540, zoom: 1 };
+  const bw = Math.max(200, x1 - x0) + 260, bh = Math.max(160, y1 - y0) + 320;
+  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, zoom: clamp(Math.min(P.w / bw, P.h / bh), .12, 1) };
+}
+function cameraAt(P, t) {
+  const c = P.camera; let cx = c.cx, cy = c.cy, z = c.zoom;
+  if (c.follow) { const ch = charById(P, c.follow); if (ch) { const p = trackFor(ch).pos(t); cx = p[0] + c.ox; cy = p[1] + c.oy; } }
+  if (c.pullOn) {
+    const k = smooth((t - c.pullStart) / Math.max(.1, c.pullEnd - c.pullStart));
+    if (k > 0) {
+      let tx = c.pullCx, ty = c.pullCy, tz = c.pullZoom;
+      if (tx == null || ty == null) { const b = autoBounds(P); tx = b.cx; ty = b.cy; tz = c.pullZoom || b.zoom; }
+      cx = lerp(cx, tx, k); cy = lerp(cy, ty, k); z = lerp(z, tz, k);
+    }
+  }
+  return { cx, cy, zoom: z };
+}
+
+/* ---- profile helpers ---- */
+function lineRgb(pr) {
+  const st = pr.color.stops; return tweakRgb(hex2rgb(st[st.length - 1].c), pr.color.brightness, pr.color.saturation);
+}
+function stopsColor(pr, u) {
+  const s = pr.color.stops, b = pr.color.brightness, sa = pr.color.saturation;
+  let c;
+  if (pr.color.mode === 'solid' || s.length === 1) c = hex2rgb(s[s.length - 1].c);
+  else {
+    const ss = s.slice().sort((a, b2) => a.o - b2.o); u = clamp(u, 0, 1);
+    if (u <= ss[0].o) c = hex2rgb(ss[0].c);
+    else if (u >= ss[ss.length - 1].o) c = hex2rgb(ss[ss.length - 1].c);
+    else { let i = 1; while (ss[i].o < u) i++; c = mixRgb(hex2rgb(ss[i - 1].c), hex2rgb(ss[i].c), (u - ss[i - 1].o) / ((ss[i].o - ss[i - 1].o) || 1e-6)); }
+  }
+  return tweakRgb(c, b, sa);
+}
+const glowRgb = pr => pr.glow.follow ? lineRgb(pr) : hex2rgb(pr.glow.color);
+const partRgb = pr => pr.particles.follow ? lineRgb(pr) : hex2rgb(pr.particles.color);
+const resolvedFont = (P, ch) => { const pr = P.profiles[ch.id]; return pr.label.override ? pr.label.font : P.fontStyles.name; };
+
+/* ---- smart palettes ---- */
+const PALETTES = {
+  '极夜蓝': ['#dff3ff', '#8fc7ff', '#4f8dff', '#bcd0ff', '#6fe0ff', '#a8b8d8'],
+  '星河紫': ['#e9d8ff', '#b79cff', '#8a74ff', '#ffc2e8', '#7fa0ff', '#d0b8ff'],
+  '霓虹都市': ['#4fd0ff', '#a45cff', '#ff4fa8', '#ffe14f', '#4fffb8', '#ff8a4f'],
+  '暗夜红': ['#ff6a4a', '#ff2a3a', '#ffa05a', '#c8283a', '#ffd0a0', '#ff5a8a'],
+  '青绿秘境': ['#7fffd8', '#2fd0a0', '#9affc0', '#4aa8a0', '#c8ffe8', '#5ad07a'],
+  '金色流光': ['#ffe9a8', '#ffd05a', '#f4e2c0', '#ffb84a', '#fff4d8', '#e8c070'],
+  '黑白电影': ['#ffffff', '#d8d8d8', '#b0b0b0', '#eeeeee', '#9a9a9a', '#f4f4f4'],
+  '日落余晖': ['#ffb050', '#ff7a5a', '#ffd870', '#ff5a8a', '#ffc090', '#e85a6a'],
+};
+function smartColors(n, seed = 0, sat = .78, light = .66) {
+  const out = [], base = ((seed * 47) % 360 + 360) % 360;
+  for (let i = 0; i < n; i++) {
+    const h = base + i * 137.508; const l = light + (i % 3 === 1 ? .1 : i % 3 === 2 ? -.08 : 0);
+    out.push(hsl2hex(h, sat * (i % 4 === 3 ? .5 : 1), clamp(l, .45, .85)));
+  }
+  return out;
+}
+function setProfileColor(pr, hex) {
+  pr.color.stops = pr.color.stops.map((s, i, a) => ({ o: s.o, c: i === a.length - 1 ? hex : s.c }));
+  if (pr.color.mode === 'solid') pr.color.stops = [{ o: 0, c: hex }, { o: 1, c: hex }];
+  pr.glow.color = hex; pr.tail.color = hex; pr.particles.color = hex;
+}
+function applyPaletteTo(pr, hex, withGradient = false) {
+  const [h, s, l] = rgb2hsl(...hex2rgb(hex));
+  pr.color.stops = withGradient ? [{ o: 0, c: hsl2hex(h + 18, s, clamp(l - .12, .2, .9)) }, { o: 1, c: hex }] : [{ o: 0, c: hex }, { o: 1, c: hex }];
+  pr.color.mode = withGradient ? 'along' : 'solid';
+  pr.glow.color = hex; pr.tail.color = hex; pr.particles.color = hex;
+}
+
+/* ---- relationship generator ---- */
+function perpAt(tr, t) { const a = tr.pos(t - .1), b = tr.pos(t + .1); let dx = b[0] - a[0], dy = b[1] - a[1]; const L = Math.hypot(dx, dy) || 1; return [-dy / L, dx / L]; }
+function applyRelation(P, o) {
+  const A = charById(P, o.a), B = charById(P, o.b); if (!A || !B || A === B) return false;
+  const ta = trackFor(A), tb = trackFor(B), t0 = o.t0, t1 = Math.max(o.t1, o.t0 + .5);
+  const step = Math.max(.4, (t1 - t0) / 12), gap = o.gap;
+  const p0 = tb.pos(t0), a0 = ta.pos(t0), off0 = [p0[0] - a0[0], p0[1] - a0[1]];
+  const out = [];
+  for (let t = t0; t < t1 + step * .5; t += step) {
+    const tt = Math.min(t, t1), s = (tt - t0) / (t1 - t0), ps = smooth(s), a = ta.pos(tt), pp = perpAt(ta, tt);
+    let off;
+    switch (o.type) {
+      case 'meet': off = [lerp(off0[0], pp[0] * gap, ps), lerp(off0[1], pp[1] * gap, ps)]; break;
+      case 'split': off = [lerp(off0[0], pp[0] * gap, ps), lerp(off0[1], pp[1] * gap, ps)]; break;
+      case 'parallel': off = [lerp(off0[0], pp[0] * gap, smooth(s * 4)), lerp(off0[1], pp[1] * gap, smooth(s * 4))]; break;
+      case 'cross': { const k = lerp(1, -1, ps) * gap; const b4 = smooth(s * 6); off = [lerp(off0[0], pp[0] * k, b4), lerp(off0[1], pp[1] * k, b4)]; break; }
+      case 'follow': { const L = ta.pos(tt - (o.lag || 1.5)); const q = [L[0] - a[0] + pp[0] * 0, L[1] - a[1] + 0]; off = [lerp(off0[0], q[0], smooth(s * 4)), lerp(off0[1], q[1], smooth(s * 4))]; break; }
+      default: off = off0;
+    }
+    out.push({ t: +tt.toFixed(2), x: Math.round(a[0] + off[0]), y: Math.round(a[1] + off[1]) });
+    if (tt >= t1) break;
+  }
+  const keep = B.path.filter(p => p.t < t0 - .01 || p.t > t1 + .01);
+  if (!keep.some(p => p.t <= t0)) keep.push({ t: t0, x: Math.round(p0[0]), y: Math.round(p0[1]) });
+  B.path = keep.concat(out).sort((a, b) => a.t - b.t).filter((p, i, arr) => !i || p.t - arr[i - 1].t > .02);
+  if (o.type === 'meet' || o.type === 'split' || o.type === 'cross') {
+    const mid = out[o.type === 'cross' ? Math.floor(out.length / 2) : o.type === 'meet' ? out.length - 1 : 0];
+    return mid;
+  }
+  return true;
+}
+
+/* ============ TRACE renderer: pure function of (project, t) ============ */
+'use strict';
+function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function makeLayers(w, h) {
+  const q = (d) => { const c = makeCanvas(Math.max(8, Math.round(w / d)), Math.max(8, Math.round(h / d))); return c; };
+  return { w, h, glow: makeCanvas(w, h), s4: q(4), s10: q(10), bg: null, bgKey: '' };
+}
+
+/* ---- styled text ---- */
+function styledMetrics(ctx, text, f, scale = 1) {
+  ctx.font = fontSpecString(f, f.size * scale);
+  const chars = [...text]; const sp = f.spacing * scale;
+  if (f.vertical) { const adv = f.size * scale * f.lineHeight + sp; return { w: f.size * scale, h: adv * chars.length - sp, adv, chars, ws: chars.map(() => f.size * scale) }; }
+  const ws = chars.map(c => ctx.measureText(c).width);
+  return { w: ws.reduce((a, b) => a + b, 0) + sp * Math.max(0, chars.length - 1), h: f.size * scale * f.lineHeight, chars, ws };
+}
+/* anchor: 'l' | 'c' | 'r' horizontal; vertical text anchors at its top-centre */
+function drawStyledText(ctx, text, x, y, f, o = {}) {
+  if (!text) return;
+  const scale = o.scale || 1, px = o.px || 1, anchor = o.anchor || 'c';
+  ctx.save();
+  ctx.translate(x + f.dx, y + f.dy);
+  if (f.rotate) ctx.rotate(f.rotate * Math.PI / 180);
+  ctx.globalAlpha *= clamp(f.opacity * (o.alpha == null ? 1 : o.alpha), 0, 1);
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+  const m = styledMetrics(ctx, text, f, scale), sp = f.spacing * scale;
+  const passes = [];
+  if (f.glow.on) passes.push({ blur: f.glow.blur * px * scale, col: f.glow.color, dx: 0, dy: 0, extra: true });
+  if (f.shadow.on) passes.push({ blur: f.shadow.blur * px, col: f.shadow.color, dx: f.shadow.dx * px, dy: f.shadow.dy * px });
+  passes.push({ blur: 0, col: null });
+  const draw = () => {
+    if (f.vertical) {
+      let yy = (o.anchor === 'top' ? 0 : -m.h / 2) + m.adv / 2 - (f.lineHeight * f.size * scale - f.size * scale) / 2 * 0;
+      m.chars.forEach((c, i) => { ctx.fillText(c, 0, yy + i * m.adv); });
+    } else {
+      let xx = anchor === 'l' ? 0 : anchor === 'r' ? -m.w : -m.w / 2;
+      m.chars.forEach((c, i) => { ctx.fillText(c, xx + m.ws[i] / 2, 0); xx += m.ws[i] + sp; });
+    }
+  };
+  ctx.fillStyle = f.color;
+  passes.forEach(p => {
+    ctx.shadowColor = p.col || 'transparent'; ctx.shadowBlur = p.blur; ctx.shadowOffsetX = p.dx || 0; ctx.shadowOffsetY = p.dy || 0;
+    draw();
+    if (p.extra) draw(); // second pass strengthens glow
+  });
+  ctx.restore();
+  return m;
+}
+
+/* ---- world <-> screen ---- */
+function w2s(P, cam, x, y) { return [P.w / 2 + (x - cam.cx) * cam.zoom, P.h / 2 + (y - cam.cy) * cam.zoom]; }
+function s2w(P, cam, x, y) { return [(x - P.w / 2) / cam.zoom + cam.cx, (y - P.h / 2) / cam.zoom + cam.cy]; }
+
+/* ---- star field (deterministic) ---- */
+const STARS = (() => { let s = 12345; const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; const a = []; for (let i = 0; i < 520; i++) a.push({ x: r(), y: r(), b: r() ** 3 * .9 + .1, ph: r() * 6.28, par: .06 + r() * .2, sz: r() < .1 ? 1.6 : 1 }); return a; })();
+
+function drawBackground(ctx, P, t, cam, k) {
+  const W = P.w, H = P.h;
+  if (P.bg.mode === 'solid') { ctx.fillStyle = P.bg.c1; ctx.fillRect(0, 0, W, H); }
+  else { const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, P.bg.c1); g.addColorStop(1, P.bg.c2); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+  if (P.stars) {
+    STARS.forEach(s => {
+      const px = ((s.x * (W + 600) - cam.cx * s.par * cam.zoom) % (W + 600) + W + 600) % (W + 600) - 300;
+      const py = ((s.y * (H + 400) + cam.cy * s.par * cam.zoom) % (H + 400) + H + 400) % (H + 400) - 200;
+      if (px < 0 || px > W || py < 0 || py > H) return;
+      const tw = .65 + .35 * Math.sin(t * 1.3 + s.ph);
+      ctx.fillStyle = `rgba(220,226,255,${(s.b * tw * .75).toFixed(3)})`; ctx.fillRect(px, py, s.sz, s.sz);
+    });
+  }
+  if (P.grid) {
+    const g = 220 * cam.zoom; if (g > 14) {
+      ctx.strokeStyle = 'rgba(150,170,220,0.05)'; ctx.lineWidth = 1; ctx.beginPath();
+      const ox = (W / 2 - cam.cx * cam.zoom) % g, oy = (H / 2 - cam.cy * cam.zoom) % g;
+      for (let x = ox; x < W; x += g) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+      for (let y = oy; y < H; y += g) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+      ctx.stroke();
+    }
+  }
+}
+
+/* ---- gravestone & gate ---- */
+function drawGrave(ctx, P, x, y, ch, pr, a, k) {
+  if (a <= .003) return;
+  const rim = tweakRgb(mixRgb(lineRgb(pr), [255, 255, 255], .35), 1, 1);
+  const rimC = pr.endColor ? hex2rgb(pr.endColor) : rim;
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(x - 38, y - 144);
+  // glow at base
+  const g = ctx.createRadialGradient(38, 138, 2, 38, 138, 60); g.addColorStop(0, rgba(rimC, .35)); g.addColorStop(1, rgba(rimC, 0));
+  ctx.fillStyle = g; ctx.fillRect(-30, 80, 140, 120);
+  const body = [[12, 128], [12, 20], [26, 6], [50, 6], [64, 20], [64, 128]];
+  const path = pts => { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); };
+  const sg = ctx.createLinearGradient(12, 0, 64, 0); sg.addColorStop(0, '#2a3042'); sg.addColorStop(1, '#10131c');
+  path(body); ctx.fillStyle = sg; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = rgba(rimC, .9); ctx.stroke();
+  ctx.strokeStyle = rgba(rimC, .35); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(18, 124); ctx.lineTo(18, 24); ctx.lineTo(28, 12); ctx.lineTo(48, 12); ctx.lineTo(58, 24); ctx.lineTo(58, 124); ctx.stroke();
+  ctx.fillStyle = '#161a26'; ctx.strokeStyle = rgba(rimC, .7); ctx.lineWidth = 1.6;
+  ctx.fillRect(6, 128, 64, 8); ctx.strokeRect(6, 128, 64, 8); ctx.fillRect(1, 136, 74, 8); ctx.strokeRect(1, 136, 74, 8);
+  const mf = Object.assign({}, P.fontStyles.memorial, { vertical: true, dx: 0, dy: 0, rotate: 0 });
+  const nm = [...ch.name].length; const sz = Math.min(mf.size, 92 / Math.max(nm, 1) / mf.lineHeight);
+  mf.size = Math.max(10, sz);
+  drawStyledText(ctx, ch.name, 38, 76, mf, { px: k, anchor: 'c' });
+  ctx.restore();
+}
+function drawGate(ctx, x, y, a, open, glow, col, k) {
+  if (a <= .003) return;
+  const W = 170, Hh = 300, tint = col || [111, 179, 164];
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(x - W / 2, y - Hh + 6);
+  const cx = W / 2, top = 40;
+  const arch = () => { ctx.beginPath(); ctx.moveTo(10, Hh - 4); ctx.lineTo(10, top); ctx.ellipse(cx, top, cx - 10, (cx - 10) * .62, 0, Math.PI, 0); ctx.lineTo(W - 10, Hh - 4); ctx.closePath(); };
+  arch(); ctx.fillStyle = 'rgba(9,13,18,.94)'; ctx.fill();
+  const gap = 1.5 + open * 20;
+  const lg = ctx.createLinearGradient(cx - gap - 14, 0, cx + gap + 14, 0);
+  lg.addColorStop(0, 'rgba(160,240,255,0)'); lg.addColorStop(.5, `rgba(210,250,255,${.25 + .7 * glow})`); lg.addColorStop(1, 'rgba(160,240,255,0)');
+  ctx.save(); arch(); ctx.clip(); ctx.fillStyle = lg; ctx.fillRect(cx - gap - 14, 0, 2 * gap + 28, Hh);
+  ctx.fillStyle = `rgba(235,255,255,${.3 + .65 * glow})`; ctx.fillRect(cx - gap, 0, 2 * gap, Hh); ctx.restore();
+  const bronze = rgba(mixRgb(tint, [150, 190, 170], .5), .95), dim = rgba(mixRgb(tint, [40, 70, 70], .7), .7);
+  ctx.strokeStyle = bronze; ctx.lineWidth = 3; arch(); ctx.stroke();
+  ctx.lineWidth = 1.4;
+  for (let r = 0; r < 6; r++) {
+    const yy = top + 40 + r * 36; ctx.strokeStyle = dim;
+    ctx.beginPath(); ctx.moveTo(10, yy); ctx.lineTo(cx - gap, yy); ctx.moveTo(cx + gap, yy); ctx.lineTo(W - 10, yy); ctx.stroke();
+    ctx.fillStyle = bronze;
+    for (let j = 0; j < 3; j++) { for (const sx of [22 + j * 18, W - 22 - j * 18]) { ctx.beginPath(); ctx.arc(sx, yy + 5, 1.6, 0, 6.3); ctx.fill(); } }
+  }
+  ctx.strokeStyle = bronze; ctx.lineWidth = 2;
+  for (const sg of [-1, 1]) { ctx.beginPath(); ctx.arc(cx + sg * (gap + 14), 150, 5, 0, 6.3); ctx.stroke(); }
+  ctx.restore();
+}
+
+/* ---- main frame ---- */
+function renderFrame(P, t, ctx, L, o = {}) {
+  const k = L.w / P.w, W = P.w, H = P.h;
+  const cam = o.cam || cameraAt(P, t);
+  ctx.save(); ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingQuality = 'high';
+  drawBackground(ctx, P, t, cam, k);
+  const gctx = L.glow.getContext('2d'); gctx.setTransform(1, 0, 0, 1, 0, 0); gctx.clearRect(0, 0, L.glow.width, L.glow.height); gctx.setTransform(k, 0, 0, k, 0, 0);
+  gctx.globalCompositeOperation = 'lighter';
+  const FX = Object.assign({ graves: true, gates: true, events: true, labels: true, particles: true, texts: true }, P.fx || {});
+  const heads = [], labels = [], graves = [], gates = [];
+  const mainId = P.camera.follow;
+  const fb = 0.22 * (P.camera.pullOn ? smooth((t - P.camera.pullStart - 1) / 11) : 0);
+  const drawOrder = P.chars.filter(c => !c.hidden).sort((a, b) => (a.id === mainId) - (b.id === mainId));
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; gctx.lineCap = 'round'; gctx.lineJoin = 'round';
+  /* trails */
+  drawOrder.forEach((ch, ci) => {
+    const pr = P.profiles[ch.id]; if (!pr || t < ch.t0) return;
+    const tr = trackFor(ch), tau = Math.max(.5, pr.tail.len), fade = Math.max(.3, pr.tail.fade);
+    const floor = clamp(pr.tail.floor + (ch.id === mainId ? .35 : 0) + fb, 0, 1);
+    const gRgb = glowRgb(pr), tailRgb = hex2rgb(pr.tail.color), baseW = pr.line.width;
+    const gInt = pr.glow.intensity * pr.glow.opacity, gRad = pr.glow.radius;
+    const mult = tr.trailMult(t) * pr.color.alpha;
+    tr.segs.forEach(([a, b]) => {
+      if (t < a) return; const end = Math.min(t, b); if (end - a < .02) return;
+      const times = []; let tt = end;
+      while (tt > a) { times.push(tt); const age = t - tt; tt -= age < 3 ? 1 / 30 : age < 12 ? 1 / 15 : 1 / 7.5; }
+      times.push(a); times.reverse();
+      const n = times.length; if (n < 2) return;
+      const pts = times.map(x => { const p = tr.pos(x); return w2s(P, cam, p[0], p[1]); });
+      const head = pts[n - 1];
+      let px = pts[0][0], py = pts[0][1];
+      for (let i = 1; i < n; i++) {
+        const x = pts[i][0], y = pts[i][1], age = t - times[i];
+        const al = Math.max(Math.exp(-Math.pow(age / tau, fade)), floor) * mult;
+        if (al > .02 && !((x < -80 && px < -80) || (x > W + 80 && px > W + 80) || (y < -80 && py < -80) || (y > H + 80 && py > H + 80))) {
+          const u = i / (n - 1), w = baseW * (.35 + .65 * Math.pow(u, 1.5));
+          const ua = 1 - clamp(age / (tau * 3), 0, 1);
+          let col;
+          if (pr.color.mode === 'linear') { const th = pr.color.angle * Math.PI / 180; col = stopsColor(pr, .5 + ((x - W / 2) * Math.cos(th) + (y - H / 2) * Math.sin(th)) / Math.hypot(W, H)); }
+          else if (pr.color.mode === 'radial') col = stopsColor(pr, 1 - clamp(Math.hypot(x - head[0], y - head[1]) / (tau * 70), 0, 1));
+          else col = stopsColor(pr, ua);
+          if (pr.tail.mix > 0) col = mixRgb(col, tailRgb, pr.tail.mix * (1 - ua));
+          ctx.strokeStyle = rgba(col, al * .92); ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke();
+          if (gInt > .01) { gctx.strokeStyle = rgba(gRgb, al * .55 * gInt); gctx.lineWidth = w * (2 + 2.6 * gRad); gctx.beginPath(); gctx.moveTo(px, py); gctx.lineTo(x, y); gctx.stroke(); }
+        }
+        px = x; py = y;
+      }
+    });
+    /* head */
+    const ha = tr.headA(t);
+    if (ha > .01 && tr.segs.some(([a, b]) => t >= a && t <= b)) {
+      const p = tr.pos(t), s = w2s(P, cam, p[0], p[1]);
+      heads.push({ ch, pr, tr, s, ha, ci });
+    }
+    /* grave / gate */
+    const e = ch.end;
+    if (FX.graves && e.type === 'grave' && t >= e.te - 1.2) { const p = tr.pos(e.te), s = w2s(P, cam, p[0], p[1]); graves.push({ ch, pr, s, a: smooth((t - (e.te - 1.2)) / 1.6) }); }
+    if (FX.gates && e.type === 'door' && tr.door) {
+      const s = w2s(P, cam, tr.door[0], tr.door[1]), a = smooth((t - (e.ts - 2.5)) / 3);
+      const r0 = e.ret && e.ret.length ? e.ret[0].t : null;
+      const op = Math.max(smooth((t - (e.ts + .3)) / 1.6) * (1 - smooth((t - (e.te + .8)) / 2)), r0 != null ? .7 * smooth((t - (r0 - 1.2)) / 1.2) * (1 - smooth((t - (r0 + 1.8)) / 2)) : 0);
+      const gl = Math.max(0, 1 - Math.abs(t - (e.te - .4)) / 1.2, r0 != null ? .8 * Math.max(0, 1 - Math.abs(t - (r0 + .2)) / 1.4) : 0);
+      gates.push({ s, a, op, gl, col: pr.endColor ? hex2rgb(pr.endColor) : lineRgb(pr) });
+    }
+  });
+  /* particles & head halos into glow layer */
+  heads.forEach(h => {
+    const { ch, pr, tr, s, ha } = h, isMain = ch.id === mainId;
+    const gRgb = glowRgb(pr), r = pr.line.headSize * (isMain ? 1.5 : 1);
+    const gg = gctx.createRadialGradient(s[0], s[1], 0, s[0], s[1], r * 6.5);
+    gg.addColorStop(0, rgba(gRgb, .85 * ha * Math.max(.3, pr.glow.intensity) * pr.glow.opacity)); gg.addColorStop(1, rgba(gRgb, 0));
+    gctx.fillStyle = gg; gctx.beginPath(); gctx.arc(s[0], s[1], r * 6.5 * (.6 + .4 * pr.glow.radius), 0, 6.3); gctx.fill();
+  });
+  gates.forEach(g => { if (g.gl > .02) { const gg = gctx.createRadialGradient(g.s[0], g.s[1] - 130, 0, g.s[0], g.s[1] - 130, 150); gg.addColorStop(0, `rgba(160,245,255,${.28 * g.gl * g.a})`); gg.addColorStop(1, 'rgba(160,245,255,0)'); gctx.fillStyle = gg; gctx.fillRect(g.s[0] - 160, g.s[1] - 300, 320, 340); } });
+  graves.forEach(g => { const c = lineRgb(g.pr); const gg = gctx.createRadialGradient(g.s[0], g.s[1] - 6, 0, g.s[0], g.s[1] - 6, 70); gg.addColorStop(0, rgba(c, .3 * g.a)); gg.addColorStop(1, rgba(c, 0)); gctx.fillStyle = gg; gctx.fillRect(g.s[0] - 80, g.s[1] - 80, 160, 160); });
+  /* meet blooms */
+  for (let i = 0; i < heads.length; i++) for (let j = i + 1; j < heads.length; j++) {
+    const a = heads[i], b = heads[j], d = Math.hypot(a.s[0] - b.s[0], a.s[1] - b.s[1]);
+    if (d < 34) {
+      const f = (1 - d / 34) * Math.min(a.ha, b.ha);
+      const ca = a.pr.meetColor ? hex2rgb(a.pr.meetColor) : lineRgb(a.pr), cb = b.pr.meetColor ? hex2rgb(b.pr.meetColor) : lineRgb(b.pr), c = mixRgb(ca, cb, .5);
+      const mx = (a.s[0] + b.s[0]) / 2, my = (a.s[1] + b.s[1]) / 2, gg = gctx.createRadialGradient(mx, my, 0, mx, my, 46);
+      gg.addColorStop(0, rgba(c, .7 * f)); gg.addColorStop(1, rgba(c, 0)); gctx.fillStyle = gg; gctx.fillRect(mx - 50, my - 50, 100, 100);
+    }
+  }
+  /* composite glow layer + blurred copies */
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter';
+  const s4 = L.s4.getContext('2d'), s10 = L.s10.getContext('2d');
+  s4.setTransform(1, 0, 0, 1, 0, 0); s4.clearRect(0, 0, L.s4.width, L.s4.height); s4.imageSmoothingQuality = 'high'; s4.drawImage(L.glow, 0, 0, L.s4.width, L.s4.height);
+  s10.setTransform(1, 0, 0, 1, 0, 0); s10.clearRect(0, 0, L.s10.width, L.s10.height); s10.imageSmoothingQuality = 'high'; s10.drawImage(L.s4, 0, 0, L.s10.width, L.s10.height);
+  ctx.globalAlpha = .75; ctx.drawImage(L.glow, 0, 0);
+  ctx.globalAlpha = .9; ctx.drawImage(L.s4, 0, 0, L.w, L.h);
+  ctx.globalAlpha = 1; ctx.drawImage(L.s10, 0, 0, L.w, L.h);
+  ctx.restore(); ctx.globalCompositeOperation = 'source-over';
+  /* gates, graves */
+  gates.forEach(g => drawGate(ctx, g.s[0], g.s[1], g.a * .95, g.op, g.gl, g.col, k));
+  graves.forEach(g => drawGrave(ctx, P, g.s[0], g.s[1], g.ch, g.pr, g.a, k));
+  /* heads core, dust, labels */
+  heads.forEach(h => {
+    const { ch, pr, tr, s, ha, ci } = h, isMain = ch.id === mainId, r = pr.line.headSize * (isMain ? 1.5 : 1);
+    const lc = lineRgb(pr), hc = pr.line.headColor ? hex2rgb(pr.line.headColor) : mixRgb(lc, [255, 255, 255], .55), ic = pr.line.innerColor ? hex2rgb(pr.line.innerColor) : [255, 255, 255];
+    // dust
+    const pc = partRgb(pr), cnt = FX.particles ? Math.round(16 * pr.particles.density) : 0;
+    for (let kk = 0; kk < cnt; kk++) {
+      const age = (t + kk * .137) % 1.9, gen = Math.floor((t + kk * .137) / 1.9), tk = t - age;
+      if (tk < ch.t0) continue;
+      let sd = (ci * 1000 + kk * 37 + gen) | 0; const rn = () => ((sd = (sd * 1664525 + 1013904223) | 0) >>> 0) / 4294967296;
+      const p = tr.pos(tk), q = w2s(P, cam, p[0], p[1]);
+      const fl = 1 - pr.particles.flicker * (.5 + .5 * Math.sin(t * 9 + kk * 2.3));
+      const al = Math.pow(1 - age / 1.9, 1.4) * ha * .75 * fl;
+      ctx.fillStyle = rgba(mixRgb(pc, [255, 255, 255], .35), al); ctx.beginPath(); ctx.arc(q[0] + (rn() - .5) * (8 + age * 14), q[1] + (rn() - .5) * (8 + age * 14), 1.1, 0, 6.3); ctx.fill();
+    }
+    ctx.globalAlpha = ha;
+    ctx.fillStyle = rgba(hc, .95); ctx.beginPath(); ctx.arc(s[0], s[1], r, 0, 6.3); ctx.fill();
+    ctx.fillStyle = rgba(ic, 1); ctx.beginPath(); ctx.arc(s[0], s[1], r * .45, 0, 6.3); ctx.fill();
+    if (isMain) { ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(s[0] - 40, s[1]); ctx.lineTo(s[0] + 40, s[1]); ctx.moveTo(s[0], s[1] - 28); ctx.lineTo(s[0], s[1] + 28); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+    if (FX.labels && pr.label.show) labels.push({ ch, pr, s, ha, ci, isMain });
+  });
+  labels.forEach(l => {
+    const f0 = resolvedFont(P, l.ch), f = Object.assign({}, f0, { glow: Object.assign({}, f0.glow), shadow: Object.assign({}, f0.shadow) });
+    if (l.pr.label.followColor) f.color = rgb2hex(...mixRgb(hex2rgb(f.color), lineRgb(l.pr), .3));
+    const dx = l.pr.label.dx != null ? l.pr.label.dx : 14, dy = l.pr.label.dy != null ? l.pr.label.dy : (l.ci % 2 ? 22 : -26);
+    drawStyledText(ctx, l.ch.name, l.s[0] + dx, l.s[1] + dy, f, { anchor: 'l', alpha: l.ha, px: k, scale: l.isMain ? 1.18 : 1 });
+  });
+  /* events */
+  FX.events && P.events.forEach(ev => {
+    if (t < ev.t) return; const ch = charById(P, ev.charId); if (!ch) return;
+    const pr = P.profiles[ch.id], tr = trackFor(ch), p = tr.pos(ev.t), s = w2s(P, cam, p[0], p[1]);
+    const a = smooth((t - ev.t) / .6) * (ev.dur > 0 ? 1 - smooth((t - ev.t - ev.dur) / .8) : 1); if (a <= .01) return;
+    const c = lineRgb(pr), ph = (t - ev.t) % 2.4 / 2.4;
+    ctx.save(); ctx.globalAlpha = a;
+    if (ev.kind !== 'text') {
+      ctx.strokeStyle = rgba(c, .9); ctx.fillStyle = rgba(c, .95); ctx.lineWidth = 1.6;
+      if (ev.kind === 'star') { ctx.beginPath(); for (let i = 0; i < 8; i++) { const r = i % 2 ? 4 : 13, an = i * Math.PI / 4; ctx.lineTo(s[0] + r * Math.cos(an), s[1] + r * Math.sin(an)); } ctx.closePath(); ctx.fill(); }
+      else { ctx.beginPath(); ctx.arc(s[0], s[1], 4, 0, 6.3); ctx.fill(); ctx.beginPath(); ctx.arc(s[0], s[1], 8 + ph * 16, 0, 6.3); ctx.globalAlpha = a * (1 - ph) * .8; ctx.stroke(); ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(s[0], s[1], 9, 0, 6.3); ctx.stroke(); }
+    }
+    const ef = ev.font || P.fontStyles.event, tf = P.fontStyles.time;
+    drawStyledText(ctx, ev.text, s[0], s[1] - 34, ef, { px: k });
+    if (ev.time) drawStyledText(ctx, ev.time, s[0], s[1] + 30, tf, { px: k });
+    ctx.restore();
+  });
+  /* free text layers */
+  FX.texts && P.texts.forEach(tx => {
+    if (t < tx.t0 || t > tx.t1) return;
+    const a = Math.min(tx.fi > 0 ? smooth((t - tx.t0) / tx.fi) : 1, tx.fo > 0 ? smooth((tx.t1 - t) / tx.fo) : 1);
+    if (a <= .005) return;
+    const f = tx.font || P.fontStyles[tx.role] || P.fontStyles.title;
+    drawStyledText(ctx, tx.text, tx.x * W, tx.y * H, f, { px: k, alpha: a, anchor: 'c' });
+  });
+  if (P.vignette) { const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .45, W / 2, H / 2, Math.hypot(W, H) * .62); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.45)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+  /* editor overlays (never exported) */
+  if (o.edit) drawEditOverlay(ctx, P, t, cam, o.edit);
+  ctx.restore();
+  return cam;
+}
+function drawEditOverlay(ctx, P, t, cam, ed) {
+  const ch = charById(P, ed.selId); if (!ch) return;
+  const tr = trackFor(ch);
+  ctx.save(); ctx.setLineDash([5, 6]); ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(255,235,170,.55)'; ctx.beginPath();
+  let first = true; const t1 = Math.max(P.duration, ch.path.length ? ch.path[ch.path.length - 1].t : 0);
+  for (let x = ch.t0; x <= t1; x += .25) { const p = tr.pos(x), s = w2s(P, cam, p[0], p[1]); if (first) { ctx.moveTo(s[0], s[1]); first = false; } else ctx.lineTo(s[0], s[1]); }
+  ctx.stroke(); ctx.setLineDash([]);
+  const drawPts = (pts, isRet) => pts.forEach((p, i) => {
+    const s = w2s(P, cam, p.x, p.y), sel = ed.wp && ed.wp.ret === !!isRet && ed.wp.i === i;
+    ctx.beginPath(); ctx.arc(s[0], s[1], sel ? 8 : 6, 0, 6.3);
+    ctx.fillStyle = sel ? '#ffe9a8' : (isRet ? 'rgba(160,240,255,.9)' : 'rgba(18,20,28,.92)'); ctx.fill();
+    ctx.lineWidth = 1.6; ctx.strokeStyle = sel ? '#fff' : (isRet ? '#7fe8ff' : '#ffe9a8'); ctx.stroke();
+    ctx.font = '11px system-ui,"Noto Sans SC",sans-serif'; ctx.fillStyle = 'rgba(255,240,200,.9)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(p.t.toFixed(1) + 's', s[0] + 11, s[1] - 10);
+  });
+  drawPts(ch.path, false);
+  if (ch.end.type === 'door' && ch.end.ret && ch.end.ret.length) drawPts(ch.end.ret.slice(1).map((p, i) => p), true);
+  ctx.restore();
+}
+
+/* ============ templates ============ */
+'use strict';
+const DAOMU = {"chars":[{"id":"wuxie","name":"吴邪","t0":0.0,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":0.0,"x":0,"y":0},{"t":2.0,"x":128,"y":34},{"t":4.0,"x":256,"y":73},{"t":6.0,"x":384,"y":101},{"t":8.0,"x":512,"y":122},{"t":10.0,"x":640,"y":148},{"t":12.0,"x":768,"y":182},{"t":14.0,"x":897,"y":224},{"t":16.0,"x":1025,"y":265},{"t":18.0,"x":1153,"y":299},{"t":20.0,"x":1281,"y":324},{"t":22.0,"x":1409,"y":346},{"t":24.0,"x":1537,"y":371},{"t":26.0,"x":1665,"y":406},{"t":28.0,"x":1793,"y":447},{"t":30.0,"x":1921,"y":489},{"t":32.0,"x":2049,"y":523},{"t":34.0,"x":2177,"y":548},{"t":36.0,"x":2305,"y":569},{"t":38.0,"x":2434,"y":595},{"t":40.0,"x":2562,"y":630},{"t":42.0,"x":2690,"y":671},{"t":44.0,"x":2818,"y":712},{"t":46.0,"x":2946,"y":746},{"t":48.0,"x":3074,"y":771},{"t":50.0,"x":3202,"y":792}]},{"id":"sansheng","name":"吴三省","t0":3.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"fade","ts":29,"te":34,"ret":[]},"path":[{"t":3.5,"x":1082,"y":533},{"t":4.5,"x":854,"y":354},{"t":5.5,"x":691,"y":228},{"t":6.0,"x":648,"y":201},{"t":6.5,"x":627,"y":191},{"t":7.5,"x":611,"y":175},{"t":8.5,"x":611,"y":169},{"t":9.0,"x":609,"y":171},{"t":9.5,"x":602,"y":181},{"t":10.5,"x":580,"y":226},{"t":11.5,"x":581,"y":276},{"t":12.0,"x":603,"y":292},{"t":12.5,"x":637,"y":296},{"t":13.5,"x":713,"y":276},{"t":14.5,"x":796,"y":242},{"t":15.5,"x":883,"y":219},{"t":16.0,"x":926,"y":222},{"t":16.5,"x":971,"y":232},{"t":17.5,"x":1071,"y":260},{"t":18.5,"x":1179,"y":295},{"t":19.5,"x":1286,"y":334},{"t":20.5,"x":1387,"y":373},{"t":21.5,"x":1473,"y":404},{"t":22.0,"x":1508,"y":415},{"t":22.5,"x":1539,"y":421},{"t":23.5,"x":1599,"y":427},{"t":24.5,"x":1655,"y":425},{"t":25.5,"x":1707,"y":421},{"t":26.5,"x":1757,"y":421},{"t":27.5,"x":1804,"y":431},{"t":28.0,"x":1826,"y":441},{"t":28.5,"x":1844,"y":455},{"t":29,"x":1855,"y":472}]},{"id":"qiling","name":"张起灵","t0":6.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"door","ts":32,"te":35.5,"ret":[{"t":43.5,"x":2336,"y":903},{"t":46.5,"x":2918,"y":883},{"t":48.0,"x":3045,"y":887},{"t":50.0,"x":3173,"y":908}]},"path":[{"t":6.5,"x":1241,"y":-364},{"t":7.5,"x":979,"y":-167},{"t":8.5,"x":804,"y":-25},{"t":9.0,"x":774,"y":12},{"t":9.5,"x":772,"y":35},{"t":10.5,"x":789,"y":73},{"t":11.5,"x":819,"y":112},{"t":12.0,"x":834,"y":135},{"t":12.5,"x":848,"y":162},{"t":13.5,"x":873,"y":221},{"t":14.5,"x":903,"y":277},{"t":15.5,"x":946,"y":317},{"t":16.0,"x":975,"y":328},{"t":16.5,"x":1011,"y":331},{"t":17.5,"x":1102,"y":323},{"t":18.5,"x":1203,"y":306},{"t":19.5,"x":1294,"y":295},{"t":20.0,"x":1331,"y":295},{"t":20.5,"x":1359,"y":297},{"t":21.5,"x":1398,"y":299},{"t":22.5,"x":1425,"y":299},{"t":23.5,"x":1451,"y":301},{"t":24.5,"x":1491,"y":308},{"t":25.0,"x":1519,"y":315},{"t":25.5,"x":1556,"y":328},{"t":26.5,"x":1655,"y":379},{"t":27.5,"x":1769,"y":445},{"t":28.0,"x":1826,"y":477},{"t":28.5,"x":1883,"y":507},{"t":29.5,"x":2005,"y":568},{"t":30.5,"x":2136,"y":627},{"t":31.5,"x":2274,"y":686},{"t":32.0,"x":2346,"y":716}]},{"id":"panzi","name":"潘子","t0":4.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"grave","ts":30.5,"te":34.5,"ret":[]},"path":[{"t":4.5,"x":-405,"y":-389},{"t":5.5,"x":-88,"y":-207},{"t":6.5,"x":165,"y":-77},{"t":7.0,"x":250,"y":-43},{"t":7.5,"x":315,"y":-20},{"t":8.5,"x":426,"y":23},{"t":9.5,"x":525,"y":58},{"t":10.0,"x":574,"y":69},{"t":10.5,"x":625,"y":78},{"t":11.5,"x":729,"y":90},{"t":12.5,"x":831,"y":97},{"t":13.5,"x":926,"y":103},{"t":14.5,"x":1008,"y":113},{"t":15.0,"x":1043,"y":122},{"t":15.5,"x":1072,"y":134},{"t":16.5,"x":1118,"y":166},{"t":17.5,"x":1153,"y":202},{"t":18.5,"x":1182,"y":235},{"t":19.5,"x":1213,"y":258},{"t":20.0,"x":1231,"y":264},{"t":20.5,"x":1249,"y":266},{"t":21.5,"x":1281,"y":267},{"t":22.5,"x":1315,"y":268},{"t":23.5,"x":1360,"y":276},{"t":24.0,"x":1389,"y":284},{"t":24.5,"x":1421,"y":294},{"t":25.5,"x":1488,"y":318},{"t":26.5,"x":1558,"y":343},{"t":27.5,"x":1633,"y":367},{"t":28.5,"x":1715,"y":389},{"t":29.5,"x":1805,"y":410},{"t":30.5,"x":1903,"y":433}]},{"id":"dakui","name":"大奎","t0":5.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"grave","ts":9.5,"te":12,"ret":[]},"path":[{"t":5.5,"x":847,"y":-375},{"t":6.5,"x":726,"y":-239},{"t":7.5,"x":648,"y":-123},{"t":8.0,"x":628,"y":-72},{"t":8.5,"x":618,"y":-26},{"t":9.5,"x":624,"y":49}]},{"id":"pangzi","name":"胖子","t0":7.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":7.5,"x":-280,"y":537},{"t":8.5,"x":-60,"y":480},{"t":9.5,"x":145,"y":427},{"t":10.5,"x":312,"y":392},{"t":11.0,"x":374,"y":387},{"t":11.5,"x":427,"y":388},{"t":12.5,"x":529,"y":395},{"t":13.5,"x":624,"y":407},{"t":14.5,"x":713,"y":420},{"t":15.5,"x":798,"y":431},{"t":16.5,"x":878,"y":440},{"t":17.5,"x":955,"y":448},{"t":18.0,"x":993,"y":454},{"t":18.5,"x":1029,"y":460},{"t":19.5,"x":1101,"y":475},{"t":20.5,"x":1171,"y":495},{"t":21.5,"x":1239,"y":516},{"t":22.5,"x":1308,"y":536},{"t":23.5,"x":1377,"y":553},{"t":24.5,"x":1446,"y":568},{"t":25.5,"x":1518,"y":582},{"t":26.0,"x":1555,"y":590},{"t":26.5,"x":1594,"y":599},{"t":27.5,"x":1682,"y":618},{"t":28.5,"x":1781,"y":639},{"t":29.5,"x":1884,"y":658},{"t":30.5,"x":1988,"y":670},{"t":31.5,"x":2089,"y":674},{"t":32.5,"x":2182,"y":671},{"t":33.5,"x":2263,"y":665},{"t":34.0,"x":2297,"y":661},{"t":34.5,"x":2328,"y":656},{"t":35.5,"x":2385,"y":634},{"t":36.5,"x":2438,"y":606},{"t":37.5,"x":2489,"y":580},{"t":38.5,"x":2541,"y":561},{"t":39.0,"x":2568,"y":558},{"t":39.5,"x":2595,"y":556},{"t":40.5,"x":2648,"y":555},{"t":41.5,"x":2702,"y":557},{"t":42.5,"x":2757,"y":566},{"t":43.5,"x":2815,"y":583},{"t":44.0,"x":2847,"y":594},{"t":44.5,"x":2879,"y":606},{"t":45.5,"x":2943,"y":628},{"t":46.5,"x":3007,"y":644},{"t":47.5,"x":3071,"y":653},{"t":48.5,"x":3135,"y":659},{"t":49.5,"x":3199,"y":665},{"t":50.0,"x":3231,"y":670}]},{"id":"aning","name":"阿宁","t0":9,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"grave","ts":19.5,"te":22,"ret":[]},"path":[{"t":9.0,"x":1599,"y":563},{"t":10.0,"x":1445,"y":515},{"t":11.0,"x":1328,"y":478},{"t":12.0,"x":1263,"y":452},{"t":13.0,"x":1248,"y":429},{"t":14.0,"x":1253,"y":408},{"t":15.0,"x":1258,"y":391},{"t":16.0,"x":1241,"y":377},{"t":17.0,"x":1224,"y":369},{"t":18.0,"x":1252,"y":377},{"t":19.0,"x":1365,"y":413},{"t":19.5,"x":1447,"y":439}]},{"id":"chenpi","name":"陈皮阿四","t0":11,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":11.0,"x":-46,"y":-424},{"t":12.0,"x":275,"y":-316},{"t":13.0,"x":458,"y":-219},{"t":14.0,"x":507,"y":-127},{"t":15.0,"x":535,"y":-37},{"t":16.0,"x":550,"y":38},{"t":17.0,"x":519,"y":101},{"t":18.0,"x":435,"y":152},{"t":19.0,"x":342,"y":179},{"t":20.0,"x":238,"y":126},{"t":21.0,"x":122,"y":9},{"t":22.0,"x":34,"y":-81},{"t":23.0,"x":-26,"y":-123},{"t":24.0,"x":-81,"y":-156},{"t":25.0,"x":-130,"y":-182},{"t":26.0,"x":-170,"y":-202},{"t":27.0,"x":-199,"y":-217},{"t":28.0,"x":-216,"y":-227},{"t":29.0,"x":-218,"y":-229},{"t":30.0,"x":-204,"y":-218},{"t":31.0,"x":-140,"y":-199},{"t":32.0,"x":-76,"y":-179},{"t":33.0,"x":-12,"y":-160},{"t":34.0,"x":52,"y":-145},{"t":35.0,"x":116,"y":-136},{"t":36.0,"x":180,"y":-130},{"t":37.0,"x":244,"y":-123},{"t":38.0,"x":309,"y":-112},{"t":39.0,"x":373,"y":-94},{"t":40.0,"x":437,"y":-71},{"t":41.0,"x":501,"y":-45},{"t":42.0,"x":565,"y":-22},{"t":43.0,"x":629,"y":-3},{"t":44.0,"x":693,"y":12},{"t":45.0,"x":757,"y":25},{"t":46.0,"x":821,"y":39},{"t":47.0,"x":885,"y":55},{"t":48.0,"x":949,"y":71},{"t":49.0,"x":1013,"y":87},{"t":50.0,"x":1077,"y":99}]},{"id":"laoyang","name":"老痒","t0":12.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":12.5,"x":1600,"y":-340},{"t":13.5,"x":1474,"y":-211},{"t":14.5,"x":1375,"y":-90},{"t":15.0,"x":1336,"y":-32},{"t":15.5,"x":1298,"y":21},{"t":16.5,"x":1241,"y":116},{"t":17.0,"x":1239,"y":163},{"t":17.5,"x":1251,"y":214},{"t":18.5,"x":1289,"y":317},{"t":19.0,"x":1317,"y":365},{"t":19.5,"x":1362,"y":409},{"t":20.5,"x":1511,"y":493},{"t":21.5,"x":1695,"y":579},{"t":22.0,"x":1784,"y":624},{"t":22.5,"x":1872,"y":674},{"t":23.5,"x":2065,"y":783},{"t":24.5,"x":2265,"y":888},{"t":25.5,"x":2454,"y":969},{"t":26.0,"x":2540,"y":995},{"t":26.5,"x":2621,"y":1015},{"t":27.5,"x":2781,"y":1055},{"t":28.5,"x":2937,"y":1096},{"t":29.5,"x":3087,"y":1137},{"t":30.5,"x":3232,"y":1177},{"t":31.5,"x":3370,"y":1209},{"t":32.5,"x":3500,"y":1232},{"t":33.5,"x":3621,"y":1244},{"t":34.0,"x":3677,"y":1248},{"t":34.5,"x":3709,"y":1251},{"t":35.5,"x":3773,"y":1257},{"t":36.5,"x":3837,"y":1268},{"t":37.5,"x":3901,"y":1285},{"t":38.5,"x":3966,"y":1306},{"t":39.5,"x":4030,"y":1327},{"t":40.5,"x":4094,"y":1346},{"t":41.5,"x":4158,"y":1363},{"t":42.5,"x":4222,"y":1379},{"t":43.5,"x":4286,"y":1396},{"t":44.5,"x":4350,"y":1415},{"t":45.5,"x":4414,"y":1437},{"t":46.5,"x":4478,"y":1457},{"t":47.5,"x":4542,"y":1472},{"t":48.5,"x":4606,"y":1482},{"t":49.5,"x":4670,"y":1488},{"t":50,"x":4702,"y":1491}]},{"id":"shunzi","name":"顺子","t0":14,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":14.0,"x":85,"y":784},{"t":15.0,"x":398,"y":641},{"t":16.0,"x":650,"y":546},{"t":17.0,"x":863,"y":495},{"t":18.0,"x":1003,"y":460},{"t":19.0,"x":1056,"y":421},{"t":20.0,"x":1093,"y":407},{"t":21.0,"x":1040,"y":520},{"t":22.0,"x":872,"y":745},{"t":23.0,"x":677,"y":967},{"t":24.0,"x":537,"y":1072},{"t":25.0,"x":456,"y":1083},{"t":26.0,"x":380,"y":1099},{"t":27.0,"x":313,"y":1121},{"t":28.0,"x":256,"y":1147},{"t":29.0,"x":211,"y":1174},{"t":30.0,"x":181,"y":1196},{"t":31.0,"x":168,"y":1211},{"t":32.0,"x":174,"y":1222},{"t":33.0,"x":238,"y":1231},{"t":34.0,"x":302,"y":1241},{"t":35.0,"x":366,"y":1254},{"t":36.0,"x":430,"y":1270},{"t":37.0,"x":494,"y":1287},{"t":38.0,"x":559,"y":1302},{"t":39.0,"x":623,"y":1315},{"t":40.0,"x":687,"y":1328},{"t":41.0,"x":751,"y":1344},{"t":42.0,"x":815,"y":1364},{"t":43.0,"x":879,"y":1389},{"t":44.0,"x":943,"y":1414},{"t":45.0,"x":1007,"y":1436},{"t":46.0,"x":1071,"y":1453},{"t":47.0,"x":1135,"y":1463},{"t":48.0,"x":1199,"y":1469},{"t":49.0,"x":1263,"y":1475},{"t":50.0,"x":1327,"y":1486}]},{"id":"wenjin","name":"陈文锦","t0":14.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"fade","ts":21,"te":25,"ret":[]},"path":[{"t":14.5,"x":2084,"y":399},{"t":15.5,"x":1885,"y":374},{"t":16.5,"x":1724,"y":356},{"t":17.5,"x":1614,"y":357},{"t":18.0,"x":1582,"y":365},{"t":18.5,"x":1558,"y":376},{"t":19.5,"x":1521,"y":401},{"t":20.5,"x":1520,"y":426},{"t":21.0,"x":1543,"y":439}]},{"id":"huling","name":"霍玲","t0":15.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"fade","ts":19,"te":22.5,"ret":[]},"path":[{"t":15.5,"x":-79,"y":-157},{"t":16.5,"x":272,"y":-20},{"t":17.5,"x":553,"y":95},{"t":18.0,"x":658,"y":140},{"t":18.5,"x":749,"y":176},{"t":19,"x":834,"y":205}]},{"id":"yuncai","name":"云彩","t0":22.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"grave","ts":26,"te":28.5,"ret":[]},"path":[{"t":22.5,"x":2497,"y":-118},{"t":23.5,"x":2322,"y":-37},{"t":24.5,"x":2130,"y":79},{"t":25.0,"x":2030,"y":142},{"t":25.5,"x":1924,"y":217},{"t":26.0,"x":1813,"y":305}]},{"id":"huoxiangu","name":"霍仙姑","t0":24,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"grave","ts":29.5,"te":32,"ret":[]},"path":[{"t":24.0,"x":382,"y":841},{"t":25.0,"x":723,"y":789},{"t":26.0,"x":1038,"y":731},{"t":27.0,"x":1351,"y":664},{"t":28.0,"x":1595,"y":616},{"t":29.0,"x":1743,"y":602},{"t":29.5,"x":1790,"y":602}]},{"id":"xiaohua","name":"解雨臣","t0":35,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":35.0,"x":3141,"y":1008},{"t":36.0,"x":3004,"y":929},{"t":37.0,"x":2905,"y":869},{"t":38.0,"x":2884,"y":850},{"t":39.0,"x":2918,"y":868},{"t":40.0,"x":2960,"y":898},{"t":41.0,"x":3010,"y":937},{"t":42.0,"x":3070,"y":976},{"t":43.0,"x":3138,"y":1015},{"t":44.0,"x":3214,"y":1053},{"t":45.0,"x":3294,"y":1088},{"t":46.0,"x":3376,"y":1120},{"t":47.0,"x":3462,"y":1154},{"t":48.0,"x":3557,"y":1191},{"t":49.0,"x":3657,"y":1229},{"t":50.0,"x":3762,"y":1268}]},{"id":"heiyan","name":"黑眼镜","t0":36.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":36.5,"x":1387,"y":125},{"t":37.5,"x":1617,"y":200},{"t":38.5,"x":1822,"y":267},{"t":39.5,"x":1983,"y":320},{"t":40.0,"x":2042,"y":335},{"t":40.5,"x":2090,"y":346},{"t":41.5,"x":2183,"y":361},{"t":42.5,"x":2269,"y":369},{"t":43.5,"x":2344,"y":374},{"t":44.0,"x":2378,"y":376},{"t":44.5,"x":2409,"y":378},{"t":45.5,"x":2466,"y":376},{"t":46.5,"x":2519,"y":371},{"t":47.5,"x":2569,"y":362},{"t":48.0,"x":2594,"y":357},{"t":48.5,"x":2618,"y":351},{"t":49.5,"x":2661,"y":335},{"t":50.0,"x":2682,"y":326}]},{"id":"wangmeng","name":"王盟","t0":37.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":37.5,"x":3301,"y":108},{"t":38.5,"x":3225,"y":187},{"t":39.5,"x":3171,"y":259},{"t":40.5,"x":3164,"y":306},{"t":41.0,"x":3186,"y":318},{"t":41.5,"x":3218,"y":326},{"t":42.5,"x":3282,"y":343},{"t":43.5,"x":3346,"y":363},{"t":44.5,"x":3410,"y":383},{"t":45.0,"x":3442,"y":393},{"t":45.5,"x":3476,"y":400},{"t":46.5,"x":3557,"y":406},{"t":47.5,"x":3651,"y":399},{"t":48.5,"x":3755,"y":384},{"t":49.5,"x":3865,"y":365},{"t":50.0,"x":3922,"y":356}]},{"id":"xiuxiu","name":"霍秀秀","t0":38.5,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":38.5,"x":1516,"y":1083},{"t":39.5,"x":1707,"y":1046},{"t":40.5,"x":1879,"y":1021},{"t":41.5,"x":2018,"y":1019},{"t":42.0,"x":2070,"y":1029},{"t":42.5,"x":2114,"y":1044},{"t":43.5,"x":2200,"y":1079},{"t":44.5,"x":2280,"y":1114},{"t":45.5,"x":2353,"y":1145},{"t":46.0,"x":2386,"y":1158},{"t":46.5,"x":2416,"y":1170},{"t":47.5,"x":2470,"y":1193},{"t":48.5,"x":2513,"y":1221},{"t":49.5,"x":2548,"y":1253},{"t":50.0,"x":2562,"y":1271}]},{"id":"lizu","name":"黎簇","t0":41,"style":"curve","amp":22,"freq":0.45,"hidden":false,"locked":false,"end":{"type":"continue","ts":0,"te":0,"ret":[]},"path":[{"t":41.0,"x":3626,"y":950},{"t":42.0,"x":3570,"y":945},{"t":43.0,"x":3547,"y":952},{"t":44.0,"x":3578,"y":964},{"t":45.0,"x":3651,"y":985},{"t":46.0,"x":3737,"y":1017},{"t":47.0,"x":3830,"y":1054},{"t":48.0,"x":3936,"y":1093},{"t":49.0,"x":4062,"y":1136},{"t":50.0,"x":4202,"y":1179}]}],"prof":{"wuxie":{"color":"#ffffff","width":3.2,"tau":60,"floor":0.55},"sansheng":{"color":"#ecc878","width":2.4,"tau":5,"floor":0.16},"qiling":{"color":"#78e1f5","width":3.0,"tau":5,"floor":0.16},"panzi":{"color":"#f08c64","width":2.4,"tau":5,"floor":0.16},"dakui":{"color":"#96afd7","width":2.4,"tau":5,"floor":0.16},"pangzi":{"color":"#ffbe5a","width":3.0,"tau":5,"floor":0.16},"aning":{"color":"#b996f5","width":2.4,"tau":5,"floor":0.16},"chenpi":{"color":"#c8aa6e","width":2.4,"tau":5,"floor":0.16},"laoyang":{"color":"#8cdc96","width":2.4,"tau":5,"floor":0.16},"shunzi":{"color":"#aac8eb","width":2.4,"tau":5,"floor":0.16},"wenjin":{"color":"#5ad7c8","width":2.4,"tau":5,"floor":0.16},"huling":{"color":"#aa78d2","width":2.4,"tau":5,"floor":0.16},"yuncai":{"color":"#f596b9","width":2.4,"tau":5,"floor":0.16},"huoxiangu":{"color":"#e1788c","width":2.4,"tau":5,"floor":0.16},"xiaohua":{"color":"#f06ebe","width":2.4,"tau":5,"floor":0.16},"heiyan":{"color":"#a0afc8","width":2.4,"tau":5,"floor":0.16},"wangmeng":{"color":"#96ebcd","width":2.4,"tau":5,"floor":0.16},"xiuxiu":{"color":"#ff9678","width":2.4,"tau":5,"floor":0.16},"lizu":{"color":"#ffaa46","width":2.4,"tau":5,"floor":0.16}}};
+function seeded(seed) { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+function addC(P, name, col, pts, o = {}) {
+  const ch = newChar(P, name, col, pts[0][1], pts[0][2], pts[0][0]);
+  ch.path = pts.map(p => ({ t: p[0], x: Math.round(p[1]), y: Math.round(p[2]) }));
+  ch.style = o.style || 'curve'; if (o.amp) ch.amp = o.amp;
+  if (o.end) ch.end = Object.assign({ type: 'continue', ts: 0, te: 0, ret: [] }, o.end);
+  const pr = P.profiles[ch.id]; if (o.width) pr.line.width = o.width; if (o.len) pr.tail.len = o.len;
+  return ch;
+}
+function addTitle(P, title, sub) {
+  if (title) P.texts.push({ id: uid(), text: title, role: 'title', t0: 0.4, t1: 5.5, fi: 1.2, fo: 1.2, x: .5, y: .44, font: null });
+  if (sub) P.texts.push({ id: uid(), text: sub, role: 'subtitle', t0: 1.2, t1: 5.5, fi: 1.2, fo: 1.2, x: .5, y: .53, font: null });
+}
+function mkProj(name, dur) { const P = newProject(); P.name = name; P.duration = dur; P.camera.follow = null; P.camera.cx = 960; P.camera.cy = 540; P.camera.zoom = 1; P.camera.pullOn = false; return P; }
+const TEMPLATES = [
+  { id: 'daomu', name: '盗墓笔记 · 众生轨迹', desc: '19 条命运线跟随主线流星前行，墓碑、失踪与青铜门', build() {
+    const P = newProject(); P.name = '盗墓笔记 · 众生轨迹'; P.duration = 50;
+    Object.assign(P.camera, { follow: 'wuxie', ox: -290, oy: 0, pullOn: true, pullStart: 37, pullEnd: 49.5, pullZoom: .55, pullCx: null, pullCy: null });
+    DAOMU.chars.forEach(c => { const ch = deep(c); P.chars.push(ch); const pr = DEFAULT_PROFILE(DAOMU.prof[c.id].color); pr.line.width = DAOMU.prof[c.id].width; pr.tail.floor = DAOMU.prof[c.id].floor; if (c.id === 'wuxie') pr.tail.len = 16; P.profiles[c.id] = pr; });
+    P.events.push({ id: uid(), charId: 'qiling', t: 46.5, dur: 3.5, kind: 'ring', text: '重逢', time: '十年之后' });
+    return P; } },
+  { id: 'converge', name: '命运交汇', desc: '六条线从四面八方汇聚到同一点', build() {
+    const P = mkProj('命运交汇', 24), cols = PALETTES['星河紫'].concat(['#6fe0ff']), R = seeded(7);
+    const src = [[-80, 140], [-80, 940], [1000, -80], [2000, 100], [2000, 980], [900, 1160]];
+    src.forEach((s, i) => addC(P, ['林', '苏', '陆', '沈', '顾', '宋'][i], cols[i], [[i * 1.2, s[0], s[1]], [8 + i * .4, lerp(s[0], 960, .6) + (R() - .5) * 120, lerp(s[1], 540, .6) + (R() - .5) * 120], [14, 960 + (i - 2.5) * 6, 540 + (i - 2.5) * 6], [22, 960 + (i < 3 ? 520 : -520) * (.3 + i * .1), 540 + (R() - .5) * 400]], { len: 5 }));
+    P.events.push({ id: uid(), charId: P.chars[0].id, t: 14, dur: 4, kind: 'ring', text: '命运交织', time: '' });
+    addTitle(P, '命 运 交 汇', '所有的路，终将相遇'); return P; } },
+  { id: 'parallel', name: '平行人生', desc: '多条线平行延伸，各自不同的节奏', build() {
+    const P = mkProj('平行人生', 24), cols = PALETTES['极夜蓝'];
+    for (let i = 0; i < 6; i++) addC(P, '第' + '一二三四五六'[i] + '人', cols[i], [[i * 1.1, -100, 200 + i * 130 + (i % 2 ? 30 : -30)], [10, 800, 200 + i * 130 + (i % 2 ? -50 : 50)], [20, 2000, 200 + i * 130 + 10]], { style: i % 2 ? 'wave' : 'curve', amp: 14 });
+    addTitle(P, '平 行 人 生', '同一时间，不同的远方'); return P; } },
+  { id: 'meetpart', name: '相遇与离别', desc: '两人相遇、同行、然后分开', build() {
+    const P = mkProj('相遇与离别', 26);
+    const a = addC(P, '阿遥', '#ffd9a0', [[0, -100, 250], [8, 700, 430], [12, 960, 540], [18, 1500, 280], [26, 2050, 120]]);
+    addC(P, '小满', '#8fd0ff', [[1.5, -100, 880], [8, 700, 650], [12, 965, 545], [18, 1500, 800], [26, 2050, 980]]);
+    P.events.push({ id: uid(), charId: a.id, t: 12, dur: 3, kind: 'ring', text: '初次相遇', time: '' }, { id: uid(), charId: a.id, t: 18, dur: 4, kind: 'dot', text: '分道扬镳', time: '' });
+    addTitle(P, '相遇与离别', ''); return P; } },
+  { id: 'ensemble', name: '群像叙事', desc: '十位人物先后登场，各自成线', build() {
+    const P = mkProj('群像叙事', 30), cols = smartColors(10, 3), R = seeded(11);
+    for (let i = 0; i < 10; i++) { const y = 120 + R() * 840, sx = R() < .5 ? -100 : 2020, dir = sx < 0 ? 1 : -1, t = i * 1.6; addC(P, '角色' + (i + 1), cols[i], [[t, sx, y], [t + 6, 960 - dir * (200 + R() * 400), 540 + (R() - .5) * 500], [t + 14, 960 + dir * (200 + R() * 500), 540 + (R() - .5) * 700], [t + 22, sx + dir * 2100, y + (R() - .5) * 400]], { len: 5 }); }
+    addTitle(P, '群 像', '十个人，十条路'); return P; } },
+  { id: 'river', name: '时间长河', desc: '人物按时间顺序依次出现，带时间标签', build() {
+    const P = mkProj('时间长河', 32), cols = PALETTES['金色流光'];
+    ['1998', '2003', '2008', '2013', '2018', '2023'].forEach((y, i) => { const t = i * 4; const c = addC(P, '人物' + (i + 1), cols[i], [[t, -100, 300 + (i % 3) * 220], [t + 8, 700 + i * 80, 540 + Math.sin(i) * 200], [t + 18, 2050, 540 + Math.cos(i) * 280]], { len: 6 }); P.events.push({ id: uid(), charId: c.id, t: t + 1.5, dur: 4, kind: 'star', text: '登场', time: y }); });
+    addTitle(P, '时 间 长 河', ''); return P; } },
+  { id: 'ends', name: '生命终点', desc: '轨迹依次走到尽头，立起墓碑', build() {
+    const P = mkProj('生命终点', 30), cols = PALETTES['黑白电影'];
+    ['甲', '乙', '丙', '丁', '戊'].forEach((n, i) => { const t = i * 1.5, ts = 10 + i * 3.2; addC(P, n, cols[i], [[t, -100, 200 + i * 150], [ts - 4, 600 + i * 120, 300 + i * 140], [ts, 800 + i * 160, 340 + i * 140]], { end: { type: 'grave', ts, te: ts + 2.6 } }); });
+    addTitle(P, '终 点', '每一条线，都有尽头'); return P; } },
+  { id: 'duo', name: '双人轨迹', desc: '两条线反复交错缠绕', build() {
+    const P = mkProj('双人轨迹', 24), A = [], B = [];
+    for (let i = 0; i <= 8; i++) { const t = i * 2.6, x = -80 + i * 260, s = i % 2 ? 1 : -1; A.push([t, x, 540 + s * 230]); B.push([t, x, 540 - s * 230]); }
+    const a = addC(P, '你', '#ffb4c8', A, { len: 6 }); addC(P, '我', '#a8d8ff', B, { len: 6 });
+    ['初次相遇', '再次重逢', '命运交织', '永远相伴'].forEach((n, k) => P.events.push({ id: uid(), charId: a.id, t: (k + 3) * 2.6 - 1.3, dur: 2, kind: 'ring', text: n, time: '' }));
+    addTitle(P, '你 与 我', ''); return P; } },
+  { id: 'galaxy', name: '星河轨迹', desc: '一群彩色流星斜掠夜空', build() {
+    const P = mkProj('星河轨迹', 20), cols = smartColors(14, 1, .85, .68), R = seeded(5);
+    cols.forEach((c, i) => { const y0 = -200 + i * 120 + R() * 60, t = i * .9; const ch = addC(P, '', c, [[t, -150, y0], [t + 8, 900, y0 + 480 + R() * 60], [t + 16, 2100, y0 + 960 + R() * 100]], { width: 1.8 + R() * 1.6, len: 4 + R() * 3 }); P.profiles[ch.id].label.show = false; });
+    addTitle(P, '星 河', ''); return P; } },
+  { id: 'blank', name: '空白画布', desc: '从零开始，自己添加人物', build() { const P = mkProj('未命名轨迹', 30); addC(P, '人物一', '#8fd0ff', [[0, -100, 700], [10, 800, 480], [20, 2000, 300]]); return P; } },
+];
+
+/* ============ video export: own MP4 / WebM muxers + WebCodecs pipeline ============ */
+'use strict';
+const u8 = (...a) => Uint8Array.from(a);
+function cat(parts) { let n = 0; parts.forEach(p => n += p.length); const o = new Uint8Array(n); let k = 0; parts.forEach(p => { o.set(p, k); k += p.length; }); return o; }
+const be32 = n => u8((n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255);
+const be16 = n => u8((n >> 8) & 255, n & 255);
+const str4 = s => u8(...[...s].map(c => c.charCodeAt(0)));
+
+/* ---------- MP4 (H.264 / AVCC samples) ---------- */
+function box(type, ...kids) { const body = cat(kids); return cat([be32(body.length + 8), str4(type), body]); }
+function fullbox(type, ver, flags, ...kids) { return box(type, u8(ver, (flags >> 16) & 255, (flags >> 8) & 255, flags & 255), ...kids); }
+/* samples: [{data:Uint8Array, key:bool}], fps, avcC: Uint8Array */
+function muxMP4({ samples, fps, width, height, avcC }) {
+  const TS = Math.round(fps * 1000), DL = 1000, n = samples.length, dur = n * DL;
+  const ftyp = box('ftyp', str4('isom'), be32(512), str4('isom'), str4('iso2'), str4('avc1'), str4('mp41'));
+  const mat = cat([be32(0x10000), be32(0), be32(0), be32(0), be32(0x10000), be32(0), be32(0), be32(0), be32(0x40000000)]);
+  const sizes = cat(samples.map(s => be32(s.data.length)));
+  const syncIdx = []; samples.forEach((s, i) => s.key && syncIdx.push(i + 1));
+  const build = (off) => {
+    const avc1 = box('avc1', new Uint8Array(6), be16(1), new Uint8Array(16), be16(width), be16(height), be32(0x480000), be32(0x480000), be32(0), be16(1), new Uint8Array(32), be16(0x18), be16(0xffff), box('avcC', avcC));
+    const stbl = box('stbl',
+      fullbox('stsd', 0, 0, be32(1), avc1),
+      fullbox('stts', 0, 0, be32(1), be32(n), be32(DL)),
+      fullbox('stss', 0, 0, be32(syncIdx.length), cat(syncIdx.map(be32))),
+      fullbox('stsc', 0, 0, be32(1), be32(1), be32(n), be32(1)),
+      fullbox('stsz', 0, 0, be32(0), be32(n), sizes),
+      fullbox('stco', 0, 0, be32(1), be32(off)));
+    const minf = box('minf', fullbox('vmhd', 0, 1, new Uint8Array(8)), box('dinf', fullbox('dref', 0, 0, be32(1), fullbox('url ', 0, 1))), stbl);
+    const mdia = box('mdia', fullbox('mdhd', 0, 0, be32(0), be32(0), be32(TS), be32(dur), be16(0x55c4), be16(0)), fullbox('hdlr', 0, 0, be32(0), str4('vide'), new Uint8Array(12), u8(...[...'TRACE video'].map(c => c.charCodeAt(0)), 0)), minf);
+    const trak = box('trak', fullbox('tkhd', 0, 3, be32(0), be32(0), be32(1), be32(0), be32(dur), new Uint8Array(8), be16(0), be16(0), be16(0), be16(0), mat, be32(width << 16), be32(height << 16)), mdia);
+    return box('moov', fullbox('mvhd', 0, 0, be32(0), be32(0), be32(TS), be32(dur), be32(0x10000), be16(0x100), new Uint8Array(10), mat, new Uint8Array(24), be32(2)), trak);
+  };
+  const moovSize = build(0).length;
+  const mdatHead = 8, off = ftyp.length + moovSize + mdatHead;
+  const moov = build(off);
+  let total = 0; samples.forEach(s => total += s.data.length);
+  const mdat = new Uint8Array(8 + total); mdat.set(be32(total + 8), 0); mdat.set(str4('mdat'), 4);
+  let k = 8; samples.forEach(s => { mdat.set(s.data, k); k += s.data.length; });
+  return new Blob([ftyp, moov, mdat], { type: 'video/mp4' });
+}
+
+/* ---------- WebM (VP9) ---------- */
+function vint(n) { // EBML size
+  for (let l = 1; l <= 8; l++) { if (n < Math.pow(2, 7 * l) - 1) { const o = new Uint8Array(l); let v = n; for (let i = l - 1; i >= 0; i--) { o[i] = v % 256; v = Math.floor(v / 256); } o[0] |= 1 << (8 - l); return o; } }
+  throw new Error('too big');
+}
+function uintBytes(n) { const o = []; do { o.unshift(n % 256); n = Math.floor(n / 256); } while (n > 0); return Uint8Array.from(o); }
+const eb = (idBytes, data) => cat([idBytes, vint(data.length), data]);
+const ebU = (id, n) => eb(id, uintBytes(n));
+const ebS = (id, s) => eb(id, str4(s));
+const ebF = (id, v) => { const b = new Uint8Array(8); new DataView(b.buffer).setFloat64(0, v); return eb(id, b); };
+/* samples: [{data, key, ts(ms)}] */
+function muxWebM({ samples, width, height, fps }) {
+  const header = eb(u8(0x1A, 0x45, 0xDF, 0xA3), cat([ebU(u8(0x42, 0x86), 1), ebU(u8(0x42, 0xF7), 1), ebU(u8(0x42, 0xF2), 4), ebU(u8(0x42, 0xF3), 8), ebS(u8(0x42, 0x82), 'webm'), ebU(u8(0x42, 0x87), 4), ebU(u8(0x42, 0x85), 2)]));
+  const lastTs = samples.length ? samples[samples.length - 1].ts + 1000 / fps : 0;
+  const info = eb(u8(0x15, 0x49, 0xA9, 0x66), cat([ebU(u8(0x2A, 0xD7, 0xB1), 1000000), ebF(u8(0x44, 0x89), lastTs), ebS(u8(0x4D, 0x80), 'TRACE'), ebS(u8(0x57, 0x41), 'TRACE')]));
+  const video = eb(u8(0xE0), cat([ebU(u8(0xB0), width), ebU(u8(0xBA), height)]));
+  const tracks = eb(u8(0x16, 0x54, 0xAE, 0x6B), eb(u8(0xAE), cat([ebU(u8(0xD7), 1), ebU(u8(0x73, 0xC5), 1), ebU(u8(0x83), 1), ebU(u8(0x9C), 0), ebS(u8(0x86), 'V_VP9'), video])));
+  /* clusters */
+  const clusters = []; let cur = null;
+  const flush = () => { if (cur) { const body = cat([ebU(u8(0xE7), cur.t0), ...cur.blocks]); cur.bytes = eb(u8(0x1F, 0x43, 0xB6, 0x75), body); clusters.push(cur); cur = null; } };
+  samples.forEach(s => {
+    const ms = Math.round(s.ts);
+    if (!cur || (s.key && cur.blocks.length) || ms - cur.t0 > 30000) { flush(); cur = { t0: ms, blocks: [] }; }
+    const rel = ms - cur.t0;
+    cur.blocks.push(eb(u8(0xA3), cat([u8(0x81), be16(rel), u8(s.key ? 0x80 : 0), s.data])));
+  });
+  flush();
+  /* cues */
+  let pos = 0; const cuePts = [];
+  clusters.forEach(c => { cuePts.push(eb(u8(0xBB), cat([ebU(u8(0xB3), c.t0), eb(u8(0xB7), cat([ebU(u8(0xF7), 1), ebU(u8(0xF1), pos)]))]))); pos += c.bytes.length; });
+  const cues = eb(u8(0x1C, 0x53, 0xBB, 0x6B), cat(cuePts));
+  const segBody = cat([info, tracks, ...clusters.map(c => c.bytes), cues]);
+  // note: cue cluster positions are relative to segment data start; info+tracks precede clusters
+  const preLen = info.length + tracks.length;
+  // rebuild cues with absolute offsets
+  pos = preLen; const cuePts2 = [];
+  clusters.forEach(c => { cuePts2.push(eb(u8(0xBB), cat([ebU(u8(0xB3), c.t0), eb(u8(0xB7), cat([ebU(u8(0xF7), 1), ebU(u8(0xF1), pos)]))]))); pos += c.bytes.length; });
+  const cues2 = eb(u8(0x1C, 0x53, 0xBB, 0x6B), cat(cuePts2));
+  const seg = eb(u8(0x18, 0x53, 0x80, 0x67), cat([info, tracks, ...clusters.map(c => c.bytes), cues2]));
+  return new Blob([header, seg], { type: 'video/webm' });
+}
+
+/* ---------- export planning ---------- */
+function exportDims(P, resKey, customAspect) {
+  const [aw, ah] = customAspect || [P.w, P.h]; const landscape = aw >= ah;
+  const base = { '720p': 720, '1080p': 1080, '2k': 1440, '4k': 2160 }[resKey] || 1080;
+  let w, h; if (landscape) { h = base; w = Math.round(base * aw / ah); } else { w = base; h = Math.round(base * ah / aw); }
+  return [w + (w & 1), h + (h & 1)];
+}
+const sleep0 = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); });
+function avcLevelFor(w, h) { const px = w * h; return px <= 2088960 ? '2a' : px <= 5652480 ? '33' : '34'; }
+async function pickCodec(kind, w, h, fps, bitrate) {
+  if (typeof VideoEncoder === 'undefined') return null;
+  const tries = kind === 'mp4'
+    ? ['avc1.6400' + avcLevelFor(w, h), 'avc1.4d00' + avcLevelFor(w, h), 'avc1.4200' + avcLevelFor(w, h)].map(c => ({ codec: c, container: 'mp4', avc: { format: 'avc' } }))
+    : [{ codec: 'vp09.00.40.08', container: 'webm' }, { codec: 'vp09.00.10.08', container: 'webm' }, { codec: 'vp8', container: 'webm' }];
+  for (const t of tries) {
+    const cfg = Object.assign({ width: w, height: h, bitrate, framerate: fps, latencyMode: 'quality' }, { codec: t.codec }); if (t.avc) cfg.avc = t.avc;
+    try { const s = await VideoEncoder.isConfigSupported(cfg); if (s.supported) return { cfg: s.config || cfg, container: t.container, codec: t.codec }; } catch (e) { }
+  }
+  return null;
+}
+/* opts: {format:'mp4'|'webm', res, fps, duration, bg, aspect, onProgress(frac,msg), signal} */
+async function exportVideo(P0, opts) {
+  const P = deep(P0); const fps = opts.fps || 30;
+  if (opts.aspect) { const a = opts.aspect; P.w = a[0] >= a[1] ? 1920 : 1080; P.h = Math.round(P.w * a[1] / a[0]); if (a[0] < a[1]) { P.h = 1920; P.w = Math.round(1920 * a[0] / a[1]); } }
+  if (opts.bg) { P.bg = Object.assign({}, P.bg, opts.bg); }
+  const dur = opts.duration || P.duration;
+  const [W, H] = exportDims(P, opts.res, [P.w, P.h]);
+  const total = Math.max(1, Math.round(dur * fps));
+  const bitrate = Math.round(Math.min(80e6, Math.max(2e6, W * H * fps * 0.16)));
+  opts.onProgress && opts.onProgress(0, '加载字体…');
+  await ensureFonts(P);
+  const canvas = makeCanvas(W, H), ctx = canvas.getContext('2d', { alpha: false }), L = makeLayers(W, H);
+  let pick = await pickCodec(opts.format, W, H, fps, bitrate);
+  if (!pick && opts.format === 'mp4') pick = await pickCodec('webm', W, H, fps, bitrate);
+  const check = () => { if (opts.signal && opts.signal.aborted) throw Object.assign(new Error('已取消'), { cancelled: true }); };
+  if (!pick) return await recordRealtime(P, opts, canvas, ctx, L, dur, fps, bitrate);
+  const samples = []; let avcC = null, encErr = null;
+  const enc = new VideoEncoder({
+    output: (chunk, meta) => {
+      const d = new Uint8Array(chunk.byteLength); chunk.copyTo(d);
+      if (meta && meta.decoderConfig && meta.decoderConfig.description && !avcC) { const dd = meta.decoderConfig.description; avcC = new Uint8Array(dd.buffer ? dd.buffer.slice(dd.byteOffset, dd.byteOffset + dd.byteLength) : dd); }
+      samples.push({ data: d, key: chunk.type === 'key', ts: chunk.timestamp / 1000 });
+    }, error: e => { encErr = e; },
+  });
+  enc.configure(pick.cfg);
+  const t00 = performance.now();
+  for (let i = 0; i < total; i++) {
+    check(); if (encErr) throw encErr;
+    renderFrame(P, i / fps, ctx, L);
+    const fr = new VideoFrame(canvas, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) });
+    enc.encode(fr, { keyFrame: i % (fps * 2) === 0 }); fr.close();
+    while (enc.encodeQueueSize > 6) { await sleep0(); if (encErr) throw encErr; }
+    if (i % 3 === 0) { const el = (performance.now() - t00) / 1000, eta = el / (i + 1) * (total - i - 1); opts.onProgress && opts.onProgress((i + 1) / total * .97, `渲染第 ${i + 1}/${total} 帧 · 预计剩余 ${Math.ceil(eta)} 秒`); await sleep0(); }
+  }
+  await enc.flush(); enc.close(); if (encErr) throw encErr; check();
+  opts.onProgress && opts.onProgress(.98, '封装文件…');
+  let blob, ext;
+  if (pick.container === 'mp4') {
+    if (!avcC) throw new Error('编码器未返回 avcC 配置');
+    blob = muxMP4({ samples, fps, width: W, height: H, avcC }); ext = 'mp4';
+  } else {
+    // timestamps already ms (frame-accurate)
+    blob = muxWebM({ samples, width: W, height: H, fps }); ext = 'webm';
+  }
+  opts.onProgress && opts.onProgress(1, '完成');
+  return { blob, ext, w: W, h: H, fps, frames: total, codec: pick.codec, note: (opts.format === 'mp4' && ext !== 'mp4') ? '' : '' };
+}
+/* last-resort: real-time capture with MediaRecorder */
+async function recordRealtime(P, opts, canvas, ctx, L, dur, fps, bitrate) {
+  if (!canvas.captureStream || typeof MediaRecorder === 'undefined') throw new Error('当前浏览器既不支持 WebCodecs 也不支持 MediaRecorder，无法导出。请使用最新版 Chrome / Edge。');
+  const stream = canvas.captureStream(fps);
+  const mimes = opts.format === 'mp4' ? ['video/mp4;codecs=avc1', 'video/webm;codecs=vp9', 'video/webm'] : ['video/webm;codecs=vp9', 'video/webm'];
+  const mime = mimes.find(m => MediaRecorder.isTypeSupported(m)); if (!mime) throw new Error('无可用的录制编码格式');
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bitrate }); const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  const done = new Promise(r => rec.onstop = r); rec.start(500);
+  const t0 = performance.now();
+  await new Promise((res, rej) => {
+    const step = () => {
+      if (opts.signal && opts.signal.aborted) { rec.stop(); return rej(Object.assign(new Error('已取消'), { cancelled: true })); }
+      const t = (performance.now() - t0) / 1000; if (t >= dur) return res();
+      renderFrame(P, t, ctx, L); opts.onProgress && opts.onProgress(t / dur, `实时录制 ${t.toFixed(1)} / ${dur}s（兼容模式）`); requestAnimationFrame(step);
+    }; step();
+  });
+  rec.stop(); await done;
+  const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  return { blob: new Blob(chunks, { type: mime.split(';')[0] }), ext, w: canvas.width, h: canvas.height, fps, frames: Math.round(dur * fps), codec: mime, note: '浏览器不支持逐帧编码，已用实时录制兼容模式（时长等于动画时长）。' };
+}
+if (typeof module !== 'undefined') module.exports = { muxMP4, muxWebM, exportDims };
+
+/* ============ TRACE editor UI (part 1: state, stage, lists, timeline, inspector) ============ */
+'use strict';
+let P = newProject(), sel = null, T = 0, playing = false, needRender = true;
+const view = { cam: { cx: 960, cy: 540, zoom: 1 }, mode: 'sel', camPreview: false, edit: true, wp: null, pps: 40 };
+const stage = $('#stage'), sctx = stage.getContext('2d');
+let L = null, lastTs = 0;
+const ACTS = {};
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const selCh = () => charById(P, sel);
+const selPr = () => P.profiles[sel];
+function toast(msg, ms = 2600) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), ms); }
+const setStatus = s => $('#status').textContent = s;
+
+/* ---- undo / autosave ---- */
+const hist = []; let hi = -1, saveTimer = 0;
+function snapshot() { return JSON.stringify({ P, sel }); }
+function commit(force) {
+  const s = snapshot(); if (!force && hist[hi] === s) return;
+  hist.length = hi + 1; hist.push(s); if (hist.length > 100) hist.shift(); hi = hist.length - 1; syncUndoBtns(); refreshAll(true);
+}
+function restore(s) { const o = JSON.parse(s); P = o.P; sel = o.sel && charById(P, o.sel) ? o.sel : (P.chars[0] && P.chars[0].id) || null; view.wp = null; needRender = true; refreshAll(); scheduleSave(); }
+function undo() { if (hi > 0) { hi--; restore(hist[hi]); syncUndoBtns(); } }
+function redo() { if (hi < hist.length - 1) { hi++; restore(hist[hi]); syncUndoBtns(); } }
+function syncUndoBtns() { $('#bUndo').disabled = hi <= 0; $('#bRedo').disabled = hi >= hist.length - 1; }
+function dirty() { needRender = true; scheduleSave(); }
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem('trace.autosave', JSON.stringify({ P, sel, t: Date.now(), fonts: UPLOADED.map(f => f.family) })); $('#saved').textContent = '已自动保存 ' + new Date().toLocaleTimeString(); } catch (e) { $('#saved').textContent = '自动保存不可用'; } }, 800); }
+function loadProject(p, keepSel) {
+  P = Object.assign(newProject(), p); P.fontStyles = Object.assign(DEFAULT_FONT_STYLES(), p.fontStyles || {});
+  Object.keys(P.fontStyles).forEach(k => P.fontStyles[k] = mkFont(P.fontStyles[k]));
+  P.profiles = P.profiles || {}; P.chars.forEach(c => { if (!P.profiles[c.id]) P.profiles[c.id] = DEFAULT_PROFILE('#ffffff'); c.end = c.end || { type: 'continue', ts: 0, te: 0, ret: [] }; c.end.ret = c.end.ret || []; });
+  P.events = P.events || []; P.texts = P.texts || []; P.fx = Object.assign({ graves: true, gates: true, events: true, labels: true, particles: true, texts: true }, p.fx || {});
+  const d = ASPECTS[P.aspect] || [P.w, P.h]; P.w = d[0]; P.h = d[1];
+  sel = keepSel && charById(P, keepSel) ? keepSel : (P.chars[0] && P.chars[0].id) || null; T = 0; view.wp = null;
+  ensureFonts(P).then(() => { needRender = true; });
+  fitView(); syncHeader(); commit(true); needRender = true; scheduleSave();
+}
+function syncHeader() { $('#pname').value = P.name; $('#aspect').value = P.aspect; $('#dur').value = P.duration; }
+
+/* ---- stage ---- */
+function resizeStage() {
+  const w = $('#stagewrap'), pad = 14, aw = Math.max(100, w.clientWidth - pad * 2), ah = Math.max(100, w.clientHeight - pad * 2);
+  const r = P.w / P.h; let cw = aw, ch = aw / r; if (ch > ah) { ch = ah; cw = ah * r; }
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  stage.style.width = cw + 'px'; stage.style.height = ch + 'px';
+  const bw = Math.round(cw * dpr), bh = Math.round(ch * dpr);
+  if (!L || L.w !== bw || L.h !== bh) { stage.width = bw; stage.height = bh; L = makeLayers(bw, bh); }
+  needRender = true;
+}
+function fitView() { const b = autoBounds(P); view.cam = { cx: b.cx, cy: b.cy, zoom: b.zoom }; needRender = true; }
+const curCam = () => view.camPreview ? cameraAt(P, T) : view.cam;
+function frame(ts) {
+  const dt = Math.min(.1, (ts - lastTs) / 1000); lastTs = ts;
+  if (playing) { T += dt * parseFloat($('#spd').value); if (T >= P.duration) { if ($('#loop').checked) T = 0; else { T = P.duration; setPlaying(false); } } needRender = true; }
+  if (needRender && L) {
+    needRender = false;
+    renderFrame(P, T, sctx, L, { cam: curCam(), edit: (view.edit && !playing && !view.camPreview) ? { selId: sel, wp: view.wp } : null });
+    $('#tcode').textContent = T.toFixed(2) + ' / ' + P.duration.toFixed(1);
+    movePlayhead();
+  }
+  requestAnimationFrame(frame);
+}
+function setPlaying(v) { playing = v; $('#bPlay').textContent = v ? '❚❚ 暂停' : '▶ 播放'; needRender = true; }
+function setT(t) { T = clamp(t, 0, P.duration); needRender = true; }
+function evPos(e) { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * P.w, (e.clientY - r.top) / r.height * P.h]; }
+function hitWp(sx, sy) {
+  const ch = selCh(); if (!ch) return null; const cam = curCam(); let best = null, bd = 14 * (P.w / stage.getBoundingClientRect().width);
+  const chk = (arr, ret) => arr.forEach((p, i) => { const s = w2s(P, cam, p.x, p.y), d = Math.hypot(s[0] - sx, s[1] - sy); if (d < bd) { bd = d; best = { ret, i: ret ? i + 1 : i }; } });
+  chk(ch.path, false); if (ch.end.type === 'door' && ch.end.ret.length) chk(ch.end.ret.slice(1), true);
+  return best;
+}
+function hitHead(sx, sy) {
+  const cam = curCam(); let best = null, bd = 22 * (P.w / stage.getBoundingClientRect().width);
+  P.chars.forEach(c => { if (c.hidden) return; const tr = trackFor(c); if (tr.headA(T) < .05) return; const p = tr.pos(T), s = w2s(P, cam, p[0], p[1]), d = Math.hypot(s[0] - sx, s[1] - sy); if (d < bd) { bd = d; best = c.id; } });
+  return best;
+}
+let drag = null;
+stage.addEventListener('pointerdown', e => {
+  if (playing || e.button === 2) return; stage.setPointerCapture(e.pointerId);
+  const [sx, sy] = evPos(e), cam = curCam(), ch = selCh();
+  if (view.mode === 'draw') { if (!ch) return toast('请先选择一个角色'); if (ch.locked) return toast('该角色已锁定'); drag = { k: 'draw', pts: [s2w(P, cam, sx, sy)] }; return; }
+  if (view.mode === 'evt') { evtClick(sx, sy); return; }
+  const wp = view.edit && !view.camPreview ? hitWp(sx, sy) : null;
+  if (wp) { if (ch.locked) return toast('该角色已锁定，无法编辑'); view.wp = wp; const arr = wp.ret ? ch.end.ret : ch.path; drag = { k: 'wp', wp, arr, moved: false }; const p = arr[wp.i]; if (!wp.ret) setT(p.t); needRender = true; refreshInspectorLite(); return; }
+  const hh = hitHead(sx, sy); if (hh) { selectChar(hh); return; }
+  view.wp = null; if (!view.camPreview) drag = { k: 'pan', sx, sy, cam: Object.assign({}, view.cam) };
+});
+stage.addEventListener('pointermove', e => {
+  if (!drag) return; const [sx, sy] = evPos(e), cam = curCam();
+  if (drag.k === 'wp') { const p = drag.arr[drag.wp.i], w = s2w(P, cam, sx, sy); p.x = Math.round(w[0]); p.y = Math.round(w[1]); drag.moved = true; dirty(); }
+  else if (drag.k === 'pan') { view.cam.cx = drag.cam.cx - (sx - drag.sx) / view.cam.zoom; view.cam.cy = drag.cam.cy - (sy - drag.sy) / view.cam.zoom; needRender = true; }
+  else if (drag.k === 'draw') { const w = s2w(P, cam, sx, sy), l = drag.pts[drag.pts.length - 1]; if (Math.hypot(w[0] - l[0], w[1] - l[1]) > 6 / cam.zoom) { drag.pts.push(w); } needRender = true; drawPreview(drag.pts); }
+});
+function drawPreview(pts) { renderFrame(P, T, sctx, L, { cam: curCam(), edit: null }); const cam = curCam(); sctx.save(); sctx.setTransform(L.w / P.w, 0, 0, L.w / P.w, 0, 0); sctx.strokeStyle = '#ffe9a8'; sctx.lineWidth = 2; sctx.beginPath(); pts.forEach((p, i) => { const s = w2s(P, cam, p[0], p[1]); i ? sctx.lineTo(s[0], s[1]) : sctx.moveTo(s[0], s[1]); }); sctx.stroke(); sctx.restore(); needRender = false; }
+stage.addEventListener('pointerup', e => {
+  if (!drag) return; const d = drag; drag = null;
+  if (d.k === 'wp' && d.moved) commit();
+  if (d.k === 'draw') applyDrawn(d.pts);
+  needRender = true;
+});
+function applyDrawn(pts) {
+  const ch = selCh(); if (!ch || pts.length < 4) return;
+  const out = [pts[0]]; let acc = 0; const n = clamp(Math.round(pts.length / 6), 3, 12);
+  const idx = []; for (let i = 0; i < n; i++) idx.push(Math.round(i / (n - 1) * (pts.length - 1)));
+  let len = 0; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+  const lastT = ch.path[ch.path.length - 1].t, dur = Math.max(4, lastT > ch.t0 + 2 ? lastT - ch.t0 : clamp(len / 150, 4, 20));
+  ch.path = idx.map((k, j) => ({ t: +(ch.t0 + dur * j / (n - 1)).toFixed(2), x: Math.round(pts[k][0]), y: Math.round(pts[k][1]) }));
+  if (ch.end.type !== 'continue') { ch.end.ts = ch.path[ch.path.length - 1].t; ch.end.te = ch.end.ts + 2.5; }
+  commit(); toast('已根据手绘生成 ' + n + ' 个控制点');
+}
+stage.addEventListener('dblclick', e => {
+  if (view.mode !== 'sel' || playing || view.camPreview) return; const ch = selCh(); if (!ch) return; if (ch.locked) return toast('该角色已锁定');
+  const [sx, sy] = evPos(e); if (hitWp(sx, sy)) return; const w = s2w(P, curCam(), sx, sy);
+  if (T < ch.t0 - .01) return toast('当前时间早于该角色出场时间，请先移动播放头');
+  const near = ch.path.find(p => Math.abs(p.t - T) < .1); if (near) { near.x = Math.round(w[0]); near.y = Math.round(w[1]); }
+  else ch.path.push({ t: +T.toFixed(2), x: Math.round(w[0]), y: Math.round(w[1]) });
+  ch.path.sort((a, b) => a.t - b.t); commit(); toast('已在 ' + T.toFixed(1) + 's 添加控制点');
+});
+stage.addEventListener('contextmenu', e => {
+  e.preventDefault(); const [sx, sy] = evPos(e), ch = selCh(), wp = hitWp(sx, sy); if (!wp || !ch || ch.locked) return;
+  if (wp.ret) ch.end.ret.splice(wp.i, 1); else { if (ch.path.length <= 2) return toast('至少保留两个控制点'); ch.path.splice(wp.i, 1); ch.t0 = ch.path[0].t; }
+  view.wp = null; commit();
+});
+stage.addEventListener('wheel', e => {
+  if (view.camPreview) return; e.preventDefault(); const [sx, sy] = evPos(e), before = s2w(P, view.cam, sx, sy);
+  view.cam.zoom = clamp(view.cam.zoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12), .08, 4);
+  const after = s2w(P, view.cam, sx, sy); view.cam.cx += before[0] - after[0]; view.cam.cy += before[1] - after[1]; needRender = true;
+}, { passive: false });
+function evtClick(sx, sy) {
+  const ch = selCh(); if (!ch) return toast('请先选择一个角色'); const tr = trackFor(ch), cam = curCam(); let best = null, bd = 1e9;
+  const end = Math.max(P.duration, ch.path[ch.path.length - 1].t);
+  for (let t = ch.t0; t <= end; t += .1) { const p = tr.pos(t), s = w2s(P, cam, p[0], p[1]), d = Math.hypot(s[0] - sx, s[1] - sy); if (d < bd) { bd = d; best = t; } }
+  if (best == null || bd > 60) return toast('请点击所选角色的轨迹附近');
+  addEvent(ch.id, +best.toFixed(1), '初次相遇'); setT(best); setLeftTab('events');
+}
+function addEvent(charId, t, text) { P.events.push({ id: uid(), charId, t, dur: 3.5, kind: 'ring', text, time: '' }); commit(); }
+
+/* ---- selection ---- */
+function selectChar(id) { sel = id; view.wp = null; needRender = true; refreshAll(); }
+function setLeftTab(t) { $$('#ltabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); ['chars', 'events', 'texts'].forEach(k => $('#p-' + k).hidden = k !== t); }
+function setRightTab(t) { $$('#rtabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); ['path', 'look', 'txt'].forEach(k => $('#r-' + k).hidden = k !== t); }
+$('#ltabs').onclick = e => { const b = e.target.closest('button'); if (b) setLeftTab(b.dataset.t); };
+$('#rtabs').onclick = e => { const b = e.target.closest('button'); if (b) setRightTab(b.dataset.t); };
+
+/* ---- generic form binding ---- */
+const getp = (o, path) => path.split('.').reduce((a, k) => a == null ? a : a[k], o);
+function setp(o, path, v) { const ks = path.split('.'), l = ks.pop(); ks.reduce((a, k) => a[k], o)[l] = v; }
+function refObj(pre) { return pre === 'c' ? selCh() : pre === 'p' ? selPr() : pre === 'P' ? P : pre === 'x' ? SPECIAL.x : pre === 'f' ? SPECIAL.f : null; }
+const SPECIAL = { x: null };
+function fld(label, k, o = {}) {
+  const [pre, path] = k.split(':'), obj = refObj(pre); if (!obj) return '';
+  let v = getp(obj, path); if (v == null) v = ''; const type = o.type || 'range', re = o.re ? ' data-re="1"' : '', dis = o.dis ? ' disabled' : '';
+  if (type === 'range') return `<label class="f"><span>${label}</span><input type="range" data-k="${k}" min="${o.min}" max="${o.max}" step="${o.step || 1}" value="${v}"${re}${dis}><b>${(+v).toFixed(o.step < 1 ? (o.step < .1 ? 2 : 1) : 0)}${o.unit || ''}</b></label>`;
+  if (type === 'num') return `<label class="f s"><span>${label}</span><input type="number" data-k="${k}" step="${o.step || 1}" ${o.min != null ? `min="${o.min}"` : ''} ${o.max != null ? `max="${o.max}"` : ''} value="${v}"${re}${dis}></label>`;
+  if (type === 'color') return `<label class="f s"><span>${label}</span><input type="color" data-k="${k}" value="${v || '#ffffff'}"${re}${dis}></label>`;
+  if (type === 'check') return `<label class="f chk"><input type="checkbox" data-k="${k}" ${v ? 'checked' : ''}${re}${dis}><span>${label}</span></label>`;
+  if (type === 'text') return `<label class="f s"><span>${label}</span><input type="text" data-k="${k}" value="${esc(v)}"${re}${dis}></label>`;
+  if (type === 'select') return `<label class="f s"><span>${label}</span><select data-k="${k}" data-str="${o.str ? 1 : ''}"${re}${dis}>${o.opts.map(([val, lab]) => `<option value="${esc(val)}" ${String(v) === String(val) ? 'selected' : ''}>${lab}</option>`).join('')}</select></label>`;
+  return '';
+}
+function onFormInput(e, final) {
+  const el = e.target, k = el.dataset && el.dataset.k; if (!k) return;
+  const [pre, path] = k.split(':'), obj = refObj(pre); if (!obj) return;
+  let v; if (el.type === 'checkbox') v = el.checked; else if (el.type === 'range' || el.type === 'number') v = el.value === '' ? 0 : parseFloat(el.value); else if (el.tagName === 'SELECT' && !el.dataset.str && !isNaN(parseFloat(el.value)) && /^-?[\d.]+$/.test(el.value)) v = parseFloat(el.value); else v = el.value;
+  if (pre === 'p' && selPr().colorLocked && /^color\.|^glow\.color|^tail\.color|^particles\.color/.test(path) && path !== 'colorLocked') { toast('颜色已锁定，请先解锁'); return; }
+  setp(obj, path, v);
+  if (el.type === 'range') { const b = el.parentElement.querySelector('b'); if (b) b.textContent = (+v).toFixed(parseFloat(el.step) < 1 ? (parseFloat(el.step) < .1 ? 2 : 1) : 0); }
+  if (pre === 'c' && path === 'name' || pre === 'P' && path === 'name') { refreshLists(); }
+  if (pre === 'c' && (path === 't0')) { const ch = selCh(); const d = v - ch.path[0].t; if (d) { ch.path[0].t = v; if (ch.path.length > 1 && ch.path[1].t <= v) ch.path[1].t = v + 1; } }
+  if (pre === 'f') fontChanged(path, final);
+  dirty(); if (final) { if (el.dataset.re) refreshInspector(); commit(); }
+}
+document.addEventListener('input', e => onFormInput(e, false));
+document.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.k) onFormInput(e, true); });
+document.addEventListener('click', e => { const a = e.target.closest('[data-act]'); if (a && ACTS[a.dataset.act]) { e.stopPropagation(); ACTS[a.dataset.act](a, e); } });
+
+/* ---- left: characters ---- */
+function addCharacter() {
+  const n = P.chars.length, cols = smartColors(n + 1, 2), cam = view.cam, hw = P.w / 2 / cam.zoom, hh = P.h / 2 / cam.zoom, r = Math.random;
+  const x0 = cam.cx - hw * .9, y0 = cam.cy + (r() - .5) * hh * 1.4, x1 = cam.cx + hw * .9, y1 = cam.cy + (r() - .5) * hh * 1.4;
+  const ch = newChar(P, '人物' + (n + 1), cols[n], x0, y0, +T.toFixed(1)); ch.path = [{ t: ch.t0, x: Math.round(x0), y: Math.round(y0) }, { t: +(ch.t0 + 6).toFixed(1), x: Math.round((x0 + x1) / 2), y: Math.round((y0 + y1) / 2 + (r() - .5) * 200) }, { t: +(ch.t0 + 12).toFixed(1), x: Math.round(x1), y: Math.round(y1) }];
+  sel = ch.id; commit(); setT(ch.t0);
+}
+function dupChar(id) { const c = charById(P, id), n = deep(c); n.id = uid(); n.name = c.name + '·副本'; n.path.forEach(p => { p.x += 50; p.y += 50; }); n.end.ret.forEach(p => { p.x += 50; p.y += 50; }); P.chars.splice(P.chars.indexOf(c) + 1, 0, n); P.profiles[n.id] = deep(P.profiles[id]); sel = n.id; commit(); }
+function delChar(id) { const i = P.chars.findIndex(c => c.id === id); P.chars.splice(i, 1); delete P.profiles[id]; P.events = P.events.filter(e => e.charId !== id); if (P.camera.follow === id) P.camera.follow = null; sel = P.chars[Math.min(i, P.chars.length - 1)] ? P.chars[Math.min(i, P.chars.length - 1)].id : null; commit(); }
+ACTS.addChar = addCharacter;
+ACTS.dup = a => dupChar(a.dataset.id);
+ACTS.del = a => delChar(a.dataset.id);
+ACTS.hide = a => { const c = charById(P, a.dataset.id); c.hidden = !c.hidden; commit(); };
+ACTS.lock = a => { const c = charById(P, a.dataset.id); c.locked = !c.locked; commit(); };
+function renderChars() {
+  const p = $('#p-chars');
+  p.innerHTML = `<div class="row"><button class="pri" data-act="addChar">＋ 添加人物</button><button data-act="openColor">批量配色</button><button data-act="openRel">关系向导</button></div>
+  <div class="chlist" id="chlist">${P.chars.map(c => { const pr = P.profiles[c.id], col = rgb2hex(...lineRgb(pr)); return `<div class="chi ${c.id === sel ? 'sel' : ''} ${c.hidden ? 'off' : ''}" draggable="true" data-id="${c.id}"><span class="dot" style="background:${col};color:${col}"></span><span class="nm">${esc(c.name) || '（无名）'}</span><button data-act="hide" data-id="${c.id}" title="隐藏/显示">${c.hidden ? '◌' : '◉'}</button><button data-act="lock" data-id="${c.id}" title="锁定">${c.locked ? '🔒' : '🔓'}</button><button data-act="dup" data-id="${c.id}" title="复制">⧉</button><button data-act="del" data-id="${c.id}" title="删除">✕</button></div>`; }).join('') || '<div class="mut small">还没有人物。点“添加人物”，或在“模板 / 项目”里选一个模板开始。</div>'}</div>
+  <div class="small mut">拖动列表项可调整顺序（靠后的角色绘制在上层）。</div>`;
+  const list = $('#chlist'); let dragId = null;
+  list.onclick = e => { const i = e.target.closest('.chi'); if (i && !e.target.closest('button')) selectChar(i.dataset.id); };
+  list.ondragstart = e => { const i = e.target.closest('.chi'); if (i) { dragId = i.dataset.id; e.dataTransfer.effectAllowed = 'move'; } };
+  list.ondragover = e => { e.preventDefault(); const i = e.target.closest('.chi'); $$('.chi', list).forEach(x => x.classList.toggle('dragover', x === i)); };
+  list.ondrop = e => { e.preventDefault(); const i = e.target.closest('.chi'); if (!i || !dragId || i.dataset.id === dragId) return; const a = P.chars.findIndex(c => c.id === dragId); const [m] = P.chars.splice(a, 1); const b = P.chars.findIndex(c => c.id === i.dataset.id); P.chars.splice(b, 0, m); dragId = null; commit(); };
+  list.ondragend = () => $$('.chi', list).forEach(x => x.classList.remove('dragover'));
+}
+/* ---- left: events ---- */
+const EVENT_PRESETS = ['初次相遇', '再次重逢', '分道扬镳', '永远分别', '命运交织'];
+function detectCrossings() {
+  const out = [], seen = [];
+  for (let a = 0; a < P.chars.length; a++) for (let b = a + 1; b < P.chars.length; b++) {
+    const A = P.chars[a], B = P.chars[b]; if (A.hidden || B.hidden) continue; const ta = trackFor(A), tb = trackFor(B); let last = -9;
+    for (let t = Math.max(A.t0, B.t0); t < P.duration; t += .25) {
+      if (ta.headA(t) < .3 || tb.headA(t) < .3) continue; const p = ta.pos(t), q = tb.pos(t);
+      if (Math.hypot(p[0] - q[0], p[1] - q[1]) < 36 && t - last > 4) { out.push({ a: A.id, b: B.id, t: +t.toFixed(1), n: A.name + ' × ' + B.name }); last = t; if (out.length > 30) return out; }
+    }
+  }
+  return out;
+}
+ACTS.addEvt = a => { if (!sel) return toast('请先选择角色'); addEvent(sel, +T.toFixed(1), a.dataset.text || '事件'); };
+ACTS.addCross = a => { const c = JSON.parse(a.dataset.c); addEvent(c.a, c.t, a.dataset.text || '初次相遇'); setT(c.t); };
+ACTS.delEvt = a => { P.events = P.events.filter(e => e.id !== a.dataset.id); commit(); };
+ACTS.goEvt = a => { const e = P.events.find(x => x.id === a.dataset.id); if (e) { setT(e.t); selectChar(e.charId); } };
+function renderEvents() {
+  const p = $('#p-events'), cr = detectCrossings();
+  p.innerHTML = `<div class="card"><h4>在所选角色的当前时间添加</h4><div class="seg">${EVENT_PRESETS.map(t => `<button data-act="addEvt" data-text="${t}">${t}</button>`).join('')}<button data-act="addEvt" data-text="自定义事件">＋自定义</button></div><div class="small mut">也可点画布工具栏“事件节点”，再点击轨迹上的位置。</div></div>
+  ${P.events.map(ev => `<div class="card" data-ev="${ev.id}"><div class="row"><input type="text" data-ev="${ev.id}" data-f="text" value="${esc(ev.text)}" style="flex:1"><button data-act="goEvt" data-id="${ev.id}" title="跳到此处">▶</button><button class="dng" data-act="delEvt" data-id="${ev.id}">✕</button></div>
+    <div class="row small"><select data-ev="${ev.id}" data-f="charId">${P.chars.map(c => `<option value="${c.id}" ${c.id === ev.charId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select><select data-ev="${ev.id}" data-f="kind">${[['ring', '涟漪'], ['dot', '光点'], ['star', '星芒'], ['text', '仅文字']].map(([v, l]) => `<option value="${v}" ${ev.kind === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    <div class="row small">时间<input type="number" step=".1" data-ev="${ev.id}" data-f="t" value="${ev.t}">持续<input type="number" step=".5" data-ev="${ev.id}" data-f="dur" value="${ev.dur}">s</div>
+    <div class="row small">时间标签<input type="text" data-ev="${ev.id}" data-f="time" value="${esc(ev.time)}" placeholder="如 2008 年夏" style="flex:1"></div></div>`).join('') || '<div class="mut small">暂无事件。</div>'}
+  <div class="card"><h4>自动检测到的交汇点</h4>${cr.length ? cr.map(c => `<div class="row small"><span style="flex:1">${esc(c.n)} @ ${c.t}s</span><button data-act="addCross" data-text="命运交织" data-c='${JSON.stringify(c)}'>＋事件</button></div>`).join('') : '<div class="mut small">暂未发现两条线靠得很近的位置。</div>'}</div>`;
+}
+$('#p-events').addEventListener('input', e => { const el = e.target, id = el.dataset.ev; if (!id) return; const ev = P.events.find(x => x.id === id); if (!ev) return; const f = el.dataset.f; ev[f] = (f === 't' || f === 'dur') ? parseFloat(el.value) || 0 : el.value; dirty(); });
+$('#p-events').addEventListener('change', e => { if (e.target.dataset.ev) commit(); });
+/* ---- left: text layers ---- */
+ACTS.addText = () => { P.texts.push({ id: uid(), text: '新的文字', role: 'title', t0: +T.toFixed(1), t1: +Math.min(P.duration, T + 5).toFixed(1), fi: 1, fo: 1, x: .5, y: .5, font: null }); commit(); };
+ACTS.delText = a => { P.texts = P.texts.filter(t => t.id !== a.dataset.id); commit(); };
+ACTS.fontText = a => openFontDrawer({ text: a.dataset.id });
+function renderTexts() {
+  const p = $('#p-texts');
+  p.innerHTML = `<button class="pri" data-act="addText">＋ 添加文字图层</button>` + (P.texts.map(t => `<div class="card"><div class="row"><input type="text" data-tx="${t.id}" data-f="text" value="${esc(t.text)}" style="flex:1"><button data-act="delText" data-id="${t.id}" class="dng">✕</button></div>
+    <div class="row small"><select data-tx="${t.id}" data-f="role">${Object.entries(FONT_ROLES).map(([k, v]) => `<option value="${k}" ${t.role === k ? 'selected' : ''}>${v}样式</option>`).join('')}</select><button data-act="fontText" data-id="${t.id}">${t.font ? '独立字体✓' : '独立字体'}</button></div>
+    <div class="row small">显示<input type="number" step=".1" data-tx="${t.id}" data-f="t0" value="${t.t0}">→<input type="number" step=".1" data-tx="${t.id}" data-f="t1" value="${t.t1}">s</div>
+    <div class="row small">淡入<input type="number" step=".1" min="0" data-tx="${t.id}" data-f="fi" value="${t.fi}">淡出<input type="number" step=".1" min="0" data-tx="${t.id}" data-f="fo" value="${t.fo}"></div>
+    <div class="row small">位置 X<input type="number" step="1" data-tx="${t.id}" data-f="x" data-pct="1" value="${Math.round(t.x * 100)}">% Y<input type="number" step="1" data-tx="${t.id}" data-f="y" data-pct="1" value="${Math.round(t.y * 100)}">%</div></div>`).join('') || '<div class="mut small">文字图层可用于片头标题、章节字幕、结尾致辞，可设置各自的出现与消失时间。</div>');
+}
+$('#p-texts').addEventListener('input', e => { const el = e.target, id = el.dataset.tx; if (!id) return; const t = P.texts.find(x => x.id === id); if (!t) return; const f = el.dataset.f; if (f === 'text' || f === 'role') t[f] = el.value; else t[f] = (parseFloat(el.value) || 0) / (el.dataset.pct ? 100 : 1); if (f === 'text') ensureFonts(P).then(() => needRender = true); dirty(); });
+$('#p-texts').addEventListener('change', e => { if (e.target.dataset.tx) commit(); });
+
+/* ---- timeline ---- */
+const tlRows = $('#tlrows'), tlNames = $('#tlnames'), tlScroll = $('#tlscroll');
+const px = t => t * view.pps;
+function snapT(t, e) { return e && e.altKey ? t : Math.round(t * 10) / 10; }
+function pdrag(e, onMove, onEnd) {
+  e.preventDefault(); e.stopPropagation(); const x0 = e.clientX; let moved = false;
+  const mv = ev => { const d = (ev.clientX - x0) / view.pps; if (Math.abs(ev.clientX - x0) > 2) moved = true; onMove(snapT(d, ev), ev); dirty(); movePlayhead(); };
+  const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); if (moved) commit(); onEnd && onEnd(moved); };
+  window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+}
+function buildTimeline() {
+  const W = px(P.duration) + 40;
+  $('#tlinner').style.width = W + 'px';
+  let ticks = ''; const step = view.pps >= 70 ? 1 : view.pps >= 28 ? 2 : view.pps >= 14 ? 5 : 10;
+  for (let t = 0; t <= P.duration + .001; t += step) ticks += `<s style="left:${px(t)}px"></s><span style="left:${px(t)}px">${t}s</span>`;
+  $('#ruler').innerHTML = ticks;
+  let names = '<div style="height:24px;border-bottom:1px solid var(--line)"></div>', rows = '';
+  P.chars.forEach(c => {
+    const pr = P.profiles[c.id], col = rgb2hex(...lineRgb(pr)), e = c.end, last = c.path[c.path.length - 1].t;
+    const endT = e.type === 'continue' ? Math.max(P.duration, last) : e.te, s = c.id === sel;
+    names += `<div class="tlname ${s ? 'sel' : ''}" data-id="${c.id}"><i style="background:${col}"></i>${esc(c.name)}</div>`;
+    rows += `<div class="tlrow ${s ? 'sel' : ''}" data-id="${c.id}"><div class="bar ${s ? 'sel' : ''}" data-id="${c.id}" style="left:${px(c.t0)}px;width:${Math.max(8, px(endT - c.t0))}px;background:${col}"><span class="h l"></span><span class="h r"></span></div>${c.path.map((p, i) => `<span class="kf ${s && view.wp && !view.wp.ret && view.wp.i === i ? 'on' : ''}" data-id="${c.id}" data-i="${i}" style="left:${px(p.t)}px"></span>`).join('')}${e.type !== 'continue' ? `<span class="endmark" style="left:${px(e.te)}px;background:${{ grave: '#cfd3de', door: '#6fb3a4', fade: '#777' }[e.type]}" title="${{ grave: '墓碑', door: '青铜门', fade: '渐隐' }[e.type]}"></span>` : ''}</div>`;
+  });
+  names += '<div class="tlname"><i style="background:var(--acc)"></i>事件</div>';
+  rows += `<div class="tlrow">${P.events.map(ev => `<span class="mk" data-ev="${ev.id}" title="${esc(ev.text)}" style="left:${px(ev.t)}px"></span>`).join('')}</div>`;
+  P.texts.forEach(t => { names += `<div class="tlname"><i style="background:#9aa4bd"></i>${esc(t.text.slice(0, 10))}</div>`; rows += `<div class="tlrow"><div class="bar" data-tx="${t.id}" style="left:${px(t.t0)}px;width:${Math.max(8, px(t.t1 - t.t0))}px;background:#9aa4bd"><span class="h l"></span><span class="h r"></span></div></div>`; });
+  tlNames.innerHTML = names; tlRows.innerHTML = rows; movePlayhead();
+}
+function movePlayhead() { $('#phead').style.left = px(T) + 'px'; }
+tlScroll.addEventListener('scroll', () => { tlNames.scrollTop = tlScroll.scrollTop; });
+tlNames.addEventListener('click', e => { const n = e.target.closest('.tlname[data-id]'); if (n) selectChar(n.dataset.id); });
+function scrubFromEvent(e) { const r = $('#tlinner').getBoundingClientRect(); setT((e.clientX - r.left) / view.pps); }
+$('#ruler').addEventListener('pointerdown', e => { setPlaying(false); scrubFromEvent(e); const mv = ev => scrubFromEvent(ev), up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); }; window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); });
+tlRows.addEventListener('pointerdown', e => {
+  const kf = e.target.closest('.kf'), bar = e.target.closest('.bar'), mk = e.target.closest('.mk'), row = e.target.closest('.tlrow');
+  if (kf) { const ch = charById(P, kf.dataset.id), i = +kf.dataset.i; if (kf.dataset.id !== sel) selectChar(kf.dataset.id); view.wp = { ret: false, i }; setT(ch.path[i].t); if (ch.locked) return; const orig = ch.path[i].t;
+    pdrag(e, d => { const lo = i > 0 ? ch.path[i - 1].t + .1 : 0, hi = i < ch.path.length - 1 ? ch.path[i + 1].t - .1 : 1e4; const nt = clamp(orig + d, lo, hi); ch.path[i].t = +nt.toFixed(2); if (i === 0) ch.t0 = ch.path[0].t; if (i === ch.path.length - 1 && ch.end.type !== 'continue' && Math.abs(ch.end.ts - orig) < .05) { const dur = ch.end.te - ch.end.ts; ch.end.ts = ch.path[i].t; ch.end.te = ch.end.ts + dur; } buildTimeline(); }); return; }
+  if (mk) { const ev = P.events.find(x => x.id === mk.dataset.ev), o = ev.t; setT(ev.t); selectChar(ev.charId); pdrag(e, d => { ev.t = Math.max(0, +(o + d).toFixed(2)); mk.style.left = px(ev.t) + 'px'; }, () => { renderEvents(); }); return; }
+  if (bar && bar.dataset.tx) { const t = P.texts.find(x => x.id === bar.dataset.tx), o = { t0: t.t0, t1: t.t1 }, h = e.target.classList.contains('h') ? (e.target.classList.contains('l') ? 'l' : 'r') : 'm';
+    pdrag(e, d => { if (h === 'm') { t.t0 = Math.max(0, +(o.t0 + d).toFixed(2)); t.t1 = +(t.t0 + o.t1 - o.t0).toFixed(2); } else if (h === 'l') t.t0 = clamp(+(o.t0 + d).toFixed(2), 0, t.t1 - .2); else t.t1 = Math.max(t.t0 + .2, +(o.t1 + d).toFixed(2)); buildTimeline(); }, () => renderTexts()); return; }
+  if (bar) { const ch = charById(P, bar.dataset.id); if (ch.id !== sel) selectChar(ch.id); if (ch.locked) return toast('该角色已锁定'); const orig = deep(ch), h = e.target.classList.contains('h') ? (e.target.classList.contains('l') ? 'l' : 'r') : 'm';
+    pdrag(e, d => {
+      if (h === 'm') { d = Math.max(d, -orig.t0); ch.t0 = +(orig.t0 + d).toFixed(2); ch.path.forEach((p, i) => p.t = +(orig.path[i].t + d).toFixed(2)); ch.end.ts = +(orig.end.ts + (orig.end.ts ? d : 0)).toFixed(2); ch.end.te = +(orig.end.te + (orig.end.te ? d : 0)).toFixed(2); ch.end.ret.forEach((p, i) => p.t = +(orig.end.ret[i].t + d).toFixed(2)); }
+      else if (h === 'l') { const nt = clamp(orig.t0 + d, 0, orig.path[1].t - .2); ch.t0 = +nt.toFixed(2); ch.path[0].t = ch.t0; }
+      else { const li = orig.path.length - 1, nl = Math.max(orig.path[li - 1].t + .2, orig.path[li].t + d); ch.path[li].t = +nl.toFixed(2); if (orig.end.type !== 'continue') { if (Math.abs(orig.end.ts - orig.path[li].t) < .05) { ch.end.ts = ch.path[li].t; ch.end.te = +(ch.end.ts + orig.end.te - orig.end.ts).toFixed(2); } else { ch.end.ts = +(orig.end.ts + d).toFixed(2); ch.end.te = +(orig.end.te + d).toFixed(2); } } }
+      buildTimeline();
+    }, () => refreshInspector()); return; }
+  if (row) { setPlaying(false); scrubFromEvent(e); const mv = ev => scrubFromEvent(ev), up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); }; window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); const id = row.dataset.id; if (id && id !== sel) selectChar(id); }
+});
+tlRows.addEventListener('dblclick', e => {
+  const kf = e.target.closest('.kf'), mk = e.target.closest('.mk'); if (kf) { const ch = charById(P, kf.dataset.id); if (ch.path.length <= 2) return toast('至少保留两个关键帧'); ch.path.splice(+kf.dataset.i, 1); ch.t0 = ch.path[0].t; view.wp = null; commit(); }
+  if (mk) { setLeftTab('events'); }
+});
+$('#tzoom').oninput = e => { view.pps = +e.target.value; buildTimeline(); };
+
+/* ---- right inspector ---- */
+const END_OPTS = [['continue', '继续延伸'], ['grave', '墓碑终点'], ['fade', '渐隐消失'], ['door', '青铜门（可重返）']];
+const STYLE_OPTS = [['curve', '曲线'], ['straight', '直线'], ['wave', '波浪线'], ['polyline', '折线']];
+ACTS.speed = a => { const ch = selCh(); if (!ch || ch.locked) return; const f = parseFloat(a.dataset.f); if (f === 1 && a.dataset.f) { } const t0 = ch.t0; ch.path.forEach(p => p.t = +(t0 + (p.t - t0) * f).toFixed(2)); if (ch.end.type !== 'continue') { ch.end.ts = +(t0 + (ch.end.ts - t0) * f).toFixed(2); ch.end.te = +(ch.end.ts + (ch.end.te - ch.end.ts)).toFixed(2); } commit(); toast(f < 1 ? '已加快' : '已放慢'); };
+ACTS.addKf = () => { const ch = selCh(); if (!ch) return toast('请先选择角色'); if (ch.locked) return toast('已锁定'); if (T < ch.t0) return toast('当前时间早于出场时间'); if (ch.path.some(p => Math.abs(p.t - T) < .1)) return toast('此时间已有关键帧'); const p = trackFor(ch).pos(T); ch.path.push({ t: +T.toFixed(2), x: Math.round(p[0]), y: Math.round(p[1]) }); ch.path.sort((a, b) => a.t - b.t); commit(); };
+ACTS.addRet = () => { const ch = selCh(); const p = trackFor(ch).door || [0, 0]; ch.end.ret = [{ t: +(ch.end.te + 4).toFixed(1), x: p[0], y: p[1] }, { t: +(ch.end.te + 8).toFixed(1), x: p[0] + 300, y: p[1] + 120 }]; commit(); };
+ACTS.clrRet = () => { selCh().end.ret = []; commit(); };
+ACTS.follow = () => { P.camera.follow = P.camera.follow === sel ? null : sel; commit(); toast(P.camera.follow ? '相机将跟随该角色（打开“相机预览”查看）' : '已取消相机跟随'); };
+function renderPathTab() {
+  const p = $('#r-path'), ch = selCh(); if (!ch) { p.innerHTML = '<div class="mut">请先在左侧选择或添加一个角色。</div>'; return; }
+  const e = ch.end, f = ch.path[0], l = ch.path[ch.path.length - 1], lock = ch.locked;
+  SPECIAL.x = { fx: f.x, fy: f.y, lx: l.x, ly: l.y };
+  p.innerHTML = `<div class="card"><h4>基本</h4>${fld('姓名', 'c:name', { type: 'text' })}${fld('线条样式', 'c:style', { type: 'select', str: 1, opts: STYLE_OPTS, re: 1 })}${ch.style === 'wave' ? fld('波幅', 'c:amp', { min: 2, max: 80 }) + fld('波频', 'c:freq', { min: .1, max: 1.5, step: .05 }) : ''}
+   ${fld('线条粗细', 'p:line.width', { min: 1, max: 10, step: .1, unit: 'px' })}${fld('线条长度', 'p:tail.len', { min: .5, max: 30, step: .1, unit: 's' })}
+   <div class="row small mut">运动速度：<button data-act="speed" data-f="1.5">慢</button><button data-act="speed" data-f="1">中</button><button data-act="speed" data-f=".67">快</button><button data-act="speed" data-f=".4">极快</button></div><div class="small mut">（慢/快会按比例拉伸该角色的整条路径用时）</div></div>
+  <div class="card"><h4>出场与退场</h4>${fld('出场时间', 'c:t0', { type: 'num', step: .1, min: 0 })}${fld('退场方式', 'c:end.type', { type: 'select', str: 1, opts: END_OPTS, re: 1 })}${e.type !== 'continue' ? fld('开始时间', 'c:end.ts', { type: 'num', step: .1 }) + fld('结束时间', 'c:end.te', { type: 'num', step: .1 }) : ''}
+   ${e.type === 'door' ? `<div class="row small"><button data-act="addRet">${e.ret.length ? '重设重返路径' : '＋ 添加重返路径'}</button>${e.ret.length ? '<button data-act="clrRet">移除</button>' : ''}</div><div class="small mut">${e.ret.length ? '青色控制点即重返路径，可在画布拖动。' : '角色走入门后可在稍后从门里重新走出。'}</div>` : ''}</div>
+  <div class="card"><h4>起止位置（画布坐标）</h4><div class="row small">起点 X<input type="number" id="fx" value="${f.x}"> Y<input type="number" id="fy" value="${f.y}"></div><div class="row small">终点 X<input type="number" id="lx" value="${l.x}"> Y<input type="number" id="ly" value="${l.y}"></div><div class="small mut">在画布上拖动控制点；双击（触屏双击）空白处添加，右键或下方按钮删除。当前共 ${ch.path.length} 个控制点。</div><div class="row small"><button data-act="addKf">在播放头处加点</button><button data-act="delWp">删除选中点</button></div>${view.wp && !view.wp.ret && ch.path[view.wp.i] ? `<div class="row small">选中控制点 t<input type="number" step=".1" id="wpt" value="${ch.path[view.wp.i].t}"></div>` : ''}</div>
+  <div class="card"><h4>相机</h4><button data-act="follow" class="${P.camera.follow === ch.id ? 'on' : ''}">${P.camera.follow === ch.id ? '✓ 相机跟随此角色' : '相机跟随此角色'}</button>${P.camera.follow ? `${fld('跟随偏移 X', 'P:camera.ox', { min: -800, max: 800, step: 10 })}${fld('跟随偏移 Y', 'P:camera.oy', { min: -500, max: 500, step: 10 })}` : fld('静态相机缩放', 'P:camera.zoom', { min: .2, max: 2, step: .05 })}
+   ${fld('结尾拉远', 'P:camera.pullOn', { type: 'check', re: 1 })}${P.camera.pullOn ? fld('开始', 'P:camera.pullStart', { type: 'num', step: .5 }) + fld('结束', 'P:camera.pullEnd', { type: 'num', step: .5 }) + fld('目标缩放', 'P:camera.pullZoom', { min: .15, max: 1.2, step: .05 }) : ''}</div>
+  <div class="card"><h4>场景效果</h4>${fld('星空', 'P:stars', { type: 'check' })}${fld('网格', 'P:grid', { type: 'check' })}${fld('暗角', 'P:vignette', { type: 'check' })}${fld('墓碑', 'P:fx.graves', { type: 'check' })}${fld('青铜门', 'P:fx.gates', { type: 'check' })}${fld('事件标记', 'P:fx.events', { type: 'check' })}${fld('姓名标签', 'P:fx.labels', { type: 'check' })}${fld('粒子', 'P:fx.particles', { type: 'check' })}${fld('文字图层', 'P:fx.texts', { type: 'check' })}${fld('背景', 'P:bg.mode', { type: 'select', str: 1, opts: [['gradient', '渐变'], ['solid', '纯色']], re: 1 })}${fld('背景色', 'P:bg.c1', { type: 'color' })}${P.bg.mode === 'gradient' ? fld('渐变色', 'P:bg.c2', { type: 'color' }) : ''}</div>
+  ${lock ? '<div class="small mut">🔒 该角色已锁定：画布与时间轴上无法修改其轨迹。</div>' : ''}`;
+  const pos = (id, which, ax) => { const el = $('#' + id); if (el) el.onchange = () => { if (ch.locked) return; (which === 'f' ? ch.path[0] : ch.path[ch.path.length - 1])[ax] = +el.value; commit(); }; };
+  pos('fx', 'f', 'x'); pos('fy', 'f', 'y'); pos('lx', 'l', 'x'); pos('ly', 'l', 'y');
+  const wt = $('#wpt'); if (wt) wt.onchange = () => { const i = view.wp.i; ch.path[i].t = +wt.value; ch.path.sort((a, b) => a.t - b.t); ch.t0 = ch.path[0].t; commit(); };
+}
+function refreshInspectorLite() { renderPathTab(); buildTimeline(); }
+function renderLookTab() {
+  const p = $('#r-look'), ch = selCh(); if (!ch) { p.innerHTML = '<div class="mut">请先选择角色。</div>'; return; }
+  const pr = selPr(), c = pr.color, lk = pr.colorLocked;
+  const stopHtml = c.mode === 'solid' ? `<label class="f s"><span>颜色</span><input type="color" id="solidc" value="${c.stops[c.stops.length - 1].c}" ${lk ? 'disabled' : ''}></label>` :
+    `<div class="stops">${c.stops.map((s, i) => `<span class="sw"><input type="color" data-stop="${i}" value="${s.c}" ${lk ? 'disabled' : ''}>${c.stops.length > 2 ? `<button class="ic" data-act="rmStop" data-i="${i}">×</button>` : ''}</span>`).join('')}${c.stops.length < 3 ? '<button data-act="addStop">＋色标</button>' : ''}</div>`;
+  p.innerHTML = `<div class="card"><h4>人物视觉档案 · ${esc(ch.name)}</h4>${fld('锁定颜色', 'p:colorLocked', { type: 'check', re: 1 })}
+    ${fld('色彩模式', 'p:color.mode', { type: 'select', str: 1, re: 1, dis: lk, opts: [['solid', '纯色'], ['linear', '线性渐变'], ['radial', '径向渐变'], ['along', '沿轨迹渐变']] })}${stopHtml}${c.mode === 'linear' ? fld('渐变角度', 'p:color.angle', { min: 0, max: 360, unit: '°' }) : ''}
+    ${fld('亮度', 'p:color.brightness', { min: .4, max: 1.6, step: .01 })}${fld('饱和度', 'p:color.saturation', { min: 0, max: 1.6, step: .01 })}${fld('不透明度', 'p:color.alpha', { min: .1, max: 1, step: .01 })}</div>
+  <div class="card"><h4>外发光 / 内发光</h4>${fld('跟随主色', 'p:glow.follow', { type: 'check', re: 1 })}${pr.glow.follow ? '' : fld('光晕色', 'p:glow.color', { type: 'color' })}${fld('强度', 'p:glow.intensity', { min: 0, max: 2, step: .05 })}${fld('范围', 'p:glow.radius', { min: .2, max: 3, step: .05 })}${fld('不透明度', 'p:glow.opacity', { min: 0, max: 1, step: .05 })}${fld('头部光点色', 'p:line.headColor', { type: 'color' })}${fld('内芯色', 'p:line.innerColor', { type: 'color' })}${fld('光点大小', 'p:line.headSize', { min: 2, max: 14, step: .5 })}</div>
+  <div class="card"><h4>拖尾</h4>${fld('尾长', 'p:tail.len', { min: .5, max: 30, step: .1, unit: 's' })}${fld('衰减曲线', 'p:tail.fade', { min: .4, max: 3, step: .05 })}${fld('尾部残留', 'p:tail.floor', { min: 0, max: 1, step: .01 })}${fld('尾端混色', 'p:tail.color', { type: 'color' })}${fld('混色比例', 'p:tail.mix', { min: 0, max: 1, step: .05 })}</div>
+  <div class="card"><h4>粒子</h4>${fld('跟随主色', 'p:particles.follow', { type: 'check', re: 1 })}${pr.particles.follow ? '' : fld('粒子色', 'p:particles.color', { type: 'color' })}${fld('密度', 'p:particles.density', { min: 0, max: 3, step: .1 })}${fld('闪烁', 'p:particles.flicker', { min: 0, max: 1, step: .05 })}</div>
+  <div class="card"><h4>交汇 / 终点颜色</h4>${fld('交汇光色', 'p:meetColor', { type: 'color' })}${fld('终点色', 'p:endColor', { type: 'color' })}<div class="small mut">交汇光：两人靠近时的光晕；终点色：墓碑/门的描边与光。</div><button data-act="clrSpecial">恢复为跟随主色</button></div>
+  <div class="card"><h4>档案复制 / 恢复</h4><div class="seg"><button data-act="copyProf" data-part="all">复制整档案</button><button data-act="copyProf" data-part="color">仅颜色</button><button data-act="copyProf" data-part="font">仅字体</button><button data-act="copyProf" data-part="tail">仅拖尾</button></div>
+   <div class="seg"><button data-act="pasteProf">粘贴到此角色</button><button data-act="pasteAll">粘贴到全部</button><button data-act="resetProf">恢复默认</button></div><div class="small mut">${CLIP ? '剪贴板：' + CLIP.part : '剪贴板为空'}</div></div>`;
+  const sc = $('#solidc'); if (sc) sc.oninput = () => { setProfileColor(pr, sc.value); dirty(); }; if (sc) sc.onchange = () => { commit(); };
+  $$('[data-stop]', p).forEach(el => { el.oninput = () => { pr.color.stops[+el.dataset.stop].c = el.value; dirty(); }; el.onchange = () => commit(); });
+}
+let CLIP = null;
+ACTS.addStop = () => { const pr = selPr(); pr.color.stops.splice(1, 0, { o: .5, c: pr.color.stops[0].c }); pr.color.stops.forEach((s, i, a) => s.o = i / (a.length - 1)); commit(); };
+ACTS.rmStop = a => { const pr = selPr(); pr.color.stops.splice(+a.dataset.i, 1); pr.color.stops.forEach((s, i, arr) => s.o = i / Math.max(1, arr.length - 1)); commit(); };
+ACTS.clrSpecial = () => { const pr = selPr(); pr.meetColor = ''; pr.endColor = ''; pr.line.headColor = ''; pr.line.innerColor = ''; commit(); };
+ACTS.copyProf = a => { const pr = selPr(), part = a.dataset.part; CLIP = { part, d: deep(part === 'all' ? pr : part === 'color' ? { color: pr.color, glow: pr.glow, particles: pr.particles, tail: { color: pr.tail.color }, meetColor: pr.meetColor, endColor: pr.endColor } : part === 'font' ? { label: pr.label } : { tail: pr.tail, line: pr.line }) }; toast('已复制档案（' + { all: '整档案', color: '仅颜色', font: '仅字体', tail: '仅拖尾' }[part] + '）'); renderLookTab(); };
+function applyClip(pr) { if (!CLIP) return; const d = deep(CLIP.d), lockedC = pr.colorLocked; const mg = (t, s) => { for (const k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k]) mg(t[k], s[k]); else t[k] = s[k]; } }; if (lockedC) { delete d.color; if (d.glow) delete d.glow.color; if (d.tail) delete d.tail.color; if (d.particles) delete d.particles.color; delete d.meetColor; delete d.endColor; } delete d.colorLocked; mg(pr, d); }
+ACTS.pasteProf = () => { if (!CLIP) return toast('先复制一个档案'); applyClip(selPr()); commit(); };
+ACTS.pasteAll = () => { if (!CLIP) return toast('先复制一个档案'); P.chars.forEach(c => c.id !== sel && applyClip(P.profiles[c.id])); commit(); toast('已粘贴到全部角色（已锁定颜色的角色保留原色）'); };
+ACTS.resetProf = () => { const pr = selPr(), col = rgb2hex(...lineRgb(pr)); const lk = pr.colorLocked; P.profiles[sel] = DEFAULT_PROFILE(col); P.profiles[sel].colorLocked = lk; commit(); };
+function renderTxtTab() {
+  const p = $('#r-txt'), ch = selCh(); if (!ch) { p.innerHTML = '<div class="mut">请先选择角色。</div>'; return; } const pr = selPr();
+  p.innerHTML = `<div class="card"><h4>姓名标签 · ${esc(ch.name)}</h4>${fld('显示标签', 'p:label.show', { type: 'check' })}${fld('独立字体', 'p:label.override', { type: 'check', re: 1 })}${pr.label.override ? `<button data-act="openFontChar">编辑此角色字体…</button>` : '<div class="small mut">未开启时使用“人物姓名”全局样式。</div>'}${fld('标签随主色', 'p:label.followColor', { type: 'check' })}
+    <div class="small mut">标签位置偏移（相对光点）</div>${fld('偏移 X', 'p:label.dx', { type: 'num', step: 2 })}${fld('偏移 Y', 'p:label.dy', { type: 'num', step: 2 })}</div>
+  <div class="card"><h4>全局文字样式</h4><div class="small mut">姓名、事件、时间、标题、副标题与墓碑纪念文字的字体、字号、颜色、间距、发光、阴影、竖排等，在“字体与文字”中统一设计，预览与导出一致。</div><button class="pri" data-act="openFont">打开字体与文字设计</button></div>`;
+}
+ACTS.openFontChar = () => openFontDrawer({ char: sel });
+ACTS.openFont = () => openFontDrawer({});
+
+/* ---- refresh ---- */
+function refreshLists() { renderChars(); buildTimeline(); }
+function refreshInspector() { renderPathTab(); renderLookTab(); renderTxtTab(); }
+function refreshAll(fromCommit) { syncHeader(); renderChars(); renderEvents(); renderTexts(); refreshInspector(); buildTimeline(); needRender = true; if (fromCommit) scheduleSave(); $('#hint').textContent = view.mode === 'draw' ? '按住鼠标拖动，绘制所选角色的新轨迹' : view.mode === 'evt' ? '点击所选轨迹上的位置，添加事件节点' : view.camPreview ? '相机预览：显示成片镜头。关闭后可自由平移（拖动）/缩放（滚轮）' : '拖动控制点改路径 · 双击空白处加点 · 右键删点 · 拖动空白平移 · 滚轮缩放'; }
+function setMode(m) { view.mode = m; $('#mSel').classList.toggle('on', m === 'sel'); $('#mDraw').classList.toggle('on', m === 'draw'); $('#mEvt').classList.toggle('on', m === 'evt'); stage.style.cursor = m === 'sel' ? 'default' : 'crosshair'; refreshAll(); }
+
+/* ---- header / transport wiring ---- */
+$('#mSel').onclick = () => setMode('sel'); $('#mDraw').onclick = () => setMode('draw'); $('#mEvt').onclick = () => setMode('evt');
+$('#mCam').onclick = e => { view.camPreview = !view.camPreview; e.currentTarget.classList.toggle('on', view.camPreview); refreshAll(); };
+$('#mFit').onclick = () => fitView();
+$('#mEdit').onclick = e => { view.edit = !view.edit; e.currentTarget.classList.toggle('on', view.edit); needRender = true; };
+$('#bPlay').onclick = () => { if (!playing && T >= P.duration - .01) T = 0; setPlaying(!playing); };
+$('#bStart').onclick = () => { setPlaying(false); setT(0); };
+$('#bPrev').onclick = () => { setPlaying(false); setT(T - 1 / P.fps); };
+$('#bNext').onclick = () => { setPlaying(false); setT(T + 1 / P.fps); };
+$('#bAddKf').onclick = () => ACTS.addKf();
+$('#bUndo').onclick = undo; $('#bRedo').onclick = redo;
+$('#pname').onchange = e => { P.name = e.target.value; commit(); };
+$('#dur').onchange = e => { P.duration = clamp(parseFloat(e.target.value) || 30, 3, 300); T = Math.min(T, P.duration); commit(); };
+$('#aspect').onchange = e => { P.aspect = e.target.value; const d = ASPECTS[P.aspect]; P.w = d[0]; P.h = d[1]; resizeStage(); fitView(); commit(); };
+document.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase(); if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  if (e.code === 'Space') { e.preventDefault(); $('#bPlay').click(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); $('#bPrev').click(); } else if (e.key === 'ArrowRight') { e.preventDefault(); $('#bNext').click(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') { const ch = selCh(); if (view.wp && ch && !ch.locked && !view.wp.ret && ch.path.length > 2) { ch.path.splice(view.wp.i, 1); ch.t0 = ch.path[0].t; view.wp = null; commit(); } }
+  else if (e.key === 'Escape') setMode('sel');
+});
+window.addEventListener('resize', () => { resizeStage(); buildTimeline(); });
+function setM(m) { document.body.dataset.m = m; $$('#mnav [data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === m)); setTimeout(() => { resizeStage(); buildTimeline(); }, 30); }
+$('#mnav').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (b) setM(b.dataset.m); });
+setM('tl');
+ACTS.mFont = () => openFontDrawer({});
+ACTS.delWp = () => { const ch = selCh(); if (!ch || !view.wp) return toast('请先在画布上点选一个控制点'); if (ch.locked) return toast('已锁定'); if (view.wp.ret) ch.end.ret.splice(view.wp.i, 1); else { if (ch.path.length <= 2) return toast('至少保留两个控制点'); ch.path.splice(view.wp.i, 1); ch.t0 = ch.path[0].t; } view.wp = null; commit(); };
+/* touch: double-tap to add point, pinch to zoom */
+const ptrs = new Map(); let lastTap = { t: 0, x: 0, y: 0 }, pinch = null;
+stage.addEventListener('pointerdown', e => { ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (ptrs.size === 2) { drag = null; const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: view.cam.zoom }; } }, true);
+stage.addEventListener('pointermove', e => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (pinch && ptrs.size === 2 && !view.camPreview) { const [a, b] = [...ptrs.values()]; view.cam.zoom = clamp(pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d, .08, 4); needRender = true; } }, true);
+const endPtr = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; };
+stage.addEventListener('pointerup', endPtr, true); stage.addEventListener('pointercancel', endPtr, true);
+stage.addEventListener('pointerup', e => { if (e.pointerType !== 'touch' || view.mode !== 'sel') return; const n = performance.now(); if (n - lastTap.t < 380 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 24) { stage.dispatchEvent(new MouseEvent('dblclick', { clientX: e.clientX, clientY: e.clientY })); lastTap.t = 0; } else lastTap = { t: n, x: e.clientX, y: e.clientY }; });
+
+/* ============ TRACE editor UI (part 2: drawers, export, bootstrap) ============ */
+'use strict';
+function openDrawer(id) { $$('.drawer').forEach(d => d.classList.toggle('open', d.id === id)); }
+function closeDrawers() { $$('.drawer').forEach(d => d.classList.remove('open')); }
+ACTS.closeDrawer = closeDrawers;
+const dHead = (title) => `<header><h3>${title}</h3><button data-act="closeDrawer">关闭 ✕</button></header>`;
+async function saveFile(name, data) {
+  let dl = null;
+  try { if (window.claude && claude.use) dl = await claude.use('downloads'); } catch (e) { }
+  if (dl) { try { await dl.save({ filename: name, data }); return true; } catch (e) { if (e && e.code === 'declined') { toast('已取消保存'); return false; } toast('保存失败：' + (e.message || e.code)); return false; } }
+  const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data])); const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000); return true;
+}
+
+/* ---------------- fonts ---------------- */
+const FD = { target: { role: 'name' }, cat: '全部', agree: false };
+function fdFont() {
+  const t = FD.target;
+  if (t.role) return P.fontStyles[t.role];
+  if (t.char) { const pr = P.profiles[t.char]; if (!pr.label.override) { pr.label.override = true; pr.label.font = mkFont(deep(P.fontStyles.name)); } return pr.label.font; }
+  if (t.text) { const tx = P.texts.find(x => x.id === t.text); if (!tx.font) tx.font = mkFont(deep(P.fontStyles[tx.role] || P.fontStyles.title)); return tx.font; }
+}
+function fdLabel() { const t = FD.target; return t.role ? FONT_ROLES[t.role] : t.char ? '角色字体 · ' + ((charById(P, t.char) || {}).name || '') : '文字图层字体'; }
+function fontChanged(path, final) { if (/family|weight/.test(path)) ensureFonts(P).then(() => { needRender = true; drawFontPreview(); }); drawFontPreview(); }
+function openFontDrawer(t) { if (t && (t.role || t.char || t.text)) FD.target = t; else if (!FD.target || (FD.target.char && !charById(P, FD.target.char))) FD.target = { role: 'name' }; renderFontDrawer(); openDrawer('dFont'); }
+const myFontPresets = () => { try { return JSON.parse(localStorage.getItem('trace.fontPresets') || '{}'); } catch (e) { return {}; } };
+function renderFontDrawer() {
+  const d = $('#dFont'), f = fdFont(); SPECIAL.f = f;
+  const cats = ['全部'].concat([...new Set(allFonts().map(x => x.cat))]);
+  const lib = allFonts().filter(x => FD.cat === '全部' || x.cat === FD.cat);
+  const chip = (lab, on, act, extra) => `<button class="${on ? 'on' : ''}" data-act="${act}" ${extra}>${lab}</button>`;
+  const roleChips = Object.entries(FONT_ROLES).map(([k, v]) => chip(v, FD.target.role === k, 'fdTarget', `data-r="${k}"`)).join('');
+  const mine = myFontPresets();
+  d.innerHTML = dHead('字体与文字设计') + `<div class="dbody">
+  <div class="card"><h4>编辑对象</h4><div class="seg">${roleChips}</div>${FD.target.char || FD.target.text ? `<div class="small mut">当前：${esc(fdLabel())}（独立样式）。点上方任一类别回到全局样式。</div>` : ''}</div>
+  <div class="card"><h4>风格预设</h4><div class="seg">${Object.keys(FONT_PRESETS).map(n => `<button data-act="fdPreset" data-n="${n}">${n}</button>`).join('')}${Object.keys(mine).map(n => `<button data-act="fdMine" data-n="${esc(n)}">★ ${esc(n)}</button>`).join('')}</div><div class="row"><input type="text" id="fpName" placeholder="预设名称" style="flex:1"><button data-act="fdSave">保存当前全部样式为预设</button></div></div>
+  <div class="card"><h4>字体库 · ${esc(fdLabel())}</h4><div class="seg">${cats.map(c => chip(c, FD.cat === c, 'fdCat', `data-c="${c}"`)).join('')}</div>
+   <div class="fontgrid">${lib.map(x => `<div class="fcard ${f.family === x.family ? 'on' : ''}" data-act="fdFamily" data-fam="${esc(x.family)}"><div class="pv" style="font-family:${cssFamily(x.family).replace(/"/g, "'")}">${x.cat === '英文' || x.cat === '极简' ? 'Trace 轨迹' : '吴邪 命运'}</div><small>${esc(x.label)}</small><small>${esc(x.lic)}</small></div>`).join('')}</div>
+   <label class="row small"><input type="checkbox" id="fdAgree" ${FD.agree ? 'checked' : ''}>我确认拥有所上传字体的使用授权（含商用与视频发布）</label>
+   <div class="row"><button data-act="fdUpload" ${FD.agree ? '' : 'disabled'}>上传 TTF / OTF / WOFF / WOFF2</button><span class="small mut">仅保存在你的浏览器中，不会上传服务器。</span></div>
+   <div class="small mut">说明：标注“OFL/Apache”的字体可商用；“系统自带”字体取决于你电脑上是否安装，且不同设备外观不同，导出前请确认字体授权。</div></div>
+  <div class="card"><h4>样式</h4>
+   ${fld('字号', 'f:size', { min: 8, max: 160, unit: 'px' })}${fld('字重', 'f:weight', { type: 'select', opts: [100, 200, 300, 400, 500, 600, 700, 900].map(w => [w, w]) })}${fld('颜色', 'f:color', { type: 'color' })}${fld('字间距', 'f:spacing', { min: -4, max: 40, step: .5 })}${fld('行高', 'f:lineHeight', { min: .8, max: 2.4, step: .05 })}${fld('不透明度', 'f:opacity', { min: 0, max: 1, step: .05 })}${fld('旋转', 'f:rotate', { min: -180, max: 180, unit: '°' })}${fld('位置偏移 X', 'f:dx', { min: -300, max: 300 })}${fld('位置偏移 Y', 'f:dy', { min: -300, max: 300 })}
+   ${fld('竖排', 'f:vertical', { type: 'check' })}${fld('发光', 'f:glow.on', { type: 'check', re: 0 })}${fld('发光色', 'f:glow.color', { type: 'color' })}${fld('发光强度', 'f:glow.blur', { min: 0, max: 60 })}${fld('阴影', 'f:shadow.on', { type: 'check' })}${fld('阴影色', 'f:shadow.color', { type: 'color' })}${fld('阴影模糊', 'f:shadow.blur', { min: 0, max: 30 })}${fld('阴影 X', 'f:shadow.dx', { min: -20, max: 20 })}${fld('阴影 Y', 'f:shadow.dy', { min: -20, max: 20 })}</div>
+  <div class="card"><h4>文字排版预览（所见即导出）</h4><canvas id="fprev" width="640" height="300" style="width:100%;border-radius:8px;background:#05050a"></canvas><div class="row"><button data-act="fdApplyAll">把“${esc(fdLabel())}”用于全部角色姓名</button><button data-act="fdClearOverride">清除所有角色独立字体</button></div></div></div>`;
+  drawFontPreview();
+  const ag = $('#fdAgree'); if (ag) ag.onchange = () => { FD.agree = ag.checked; renderFontDrawer(); };
+}
+function drawFontPreview() {
+  const cv = $('#fprev'); if (!cv || !$('#dFont').classList.contains('open') && false) return; if (!cv) return; const c = cv.getContext('2d'), W = cv.width, H = cv.height; c.clearRect(0, 0, W, H);
+  const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#07070e'); g.addColorStop(1, '#16111a'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  const FS = P.fontStyles, sc = .62, px = 1;
+  const tg = FD.target, active = fdFont();
+  const dr = (txt, x, y, f, o = {}) => drawStyledText(c, txt, x, y, f, Object.assign({ scale: sc, px }, o));
+  dr('命 运 交 汇', W / 2, 52, tg.role === 'title' ? active : FS.title); dr('所有的路，终将相遇', W / 2, 98, tg.role === 'subtitle' ? active : FS.subtitle);
+  c.fillStyle = 'rgba(143,208,255,.8)'; c.beginPath(); c.arc(130, 190, 4, 0, 6.3); c.fill(); c.strokeStyle = 'rgba(143,208,255,.5)'; c.beginPath(); c.moveTo(20, 215); c.lineTo(130, 190); c.stroke();
+  dr('吴邪', 144, 176, (tg.role === 'name' || tg.char) ? active : FS.name, { anchor: 'l' });
+  dr('初次相遇', 360, 190, tg.role === 'event' ? active : FS.event); dr('2008 年 · 夏', 360, 226, tg.role === 'time' ? active : FS.time);
+  const mf = Object.assign({}, tg.role === 'memorial' ? active : FS.memorial, { vertical: true, dx: 0, dy: 0, rotate: 0 }); mf.size = Math.min(mf.size, 26);
+  c.fillStyle = '#1b2030'; c.strokeStyle = '#8fd0ff'; c.fillRect(560, 150, 44, 110); c.strokeRect(560, 150, 44, 110); drawStyledText(c, '张起灵', 582, 205, mf, { px: 1, anchor: 'c' });
+  if (tg.text) { dr('自定义文字', W / 2, 262, active); }
+}
+Object.assign(ACTS, {
+  fdTarget: a => { FD.target = { role: a.dataset.r }; renderFontDrawer(); },
+  fdCat: a => { FD.cat = a.dataset.c; renderFontDrawer(); },
+  fdFamily: a => { const f = fdFont(); f.family = a.dataset.fam; ensureFonts(P).then(() => { needRender = true; drawFontPreview(); }); commit(); renderFontDrawer(); },
+  fdPreset: a => { const pr = FONT_PRESETS[a.dataset.n]; Object.keys(pr).forEach(role => { const cur = deep(P.fontStyles[role]); const mg = (t, s) => { for (const k in s) { if (s[k] && typeof s[k] === 'object') mg(t[k], s[k]); else t[k] = s[k]; } }; mg(cur, pr[role]); P.fontStyles[role] = mkFont(cur); }); ensureFonts(P).then(() => needRender = true); commit(); renderFontDrawer(); toast('已应用：' + a.dataset.n); },
+  fdMine: a => { const m = myFontPresets()[a.dataset.n]; if (!m) return; Object.keys(m).forEach(k => P.fontStyles[k] = mkFont(m[k])); ensureFonts(P).then(() => needRender = true); commit(); renderFontDrawer(); },
+  fdSave: () => { const n = ($('#fpName').value || '').trim(); if (!n) return toast('请先输入预设名称'); const m = myFontPresets(); m[n] = deep(P.fontStyles); try { localStorage.setItem('trace.fontPresets', JSON.stringify(m)); toast('已保存预设：' + n); } catch (e) { toast('无法保存到浏览器存储'); } renderFontDrawer(); },
+  fdApplyAll: () => { const f = deep(fdFont()); P.chars.forEach(c => { const pr = P.profiles[c.id]; pr.label.override = true; pr.label.font = mkFont(deep(f)); }); commit(); toast('已应用到全部角色'); },
+  fdClearOverride: () => { P.chars.forEach(c => P.profiles[c.id].label.override = false); commit(); toast('已清除'); },
+  fdUpload: () => { if (!FD.agree) return; $('#fileFont').click(); },
+});
+$('#dFont').addEventListener('change', e => { if (e.target.dataset.k) { drawFontPreview(); } });
+/* uploaded fonts persisted in IndexedDB */
+const idb = { db: null, open() { return new Promise((res, rej) => { try { const r = indexedDB.open('trace', 1); r.onupgradeneeded = () => r.result.createObjectStore('fonts', { keyPath: 'family' }); r.onsuccess = () => { this.db = r.result; res(this.db); }; r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); }, put(v) { return new Promise((res, rej) => { const t = this.db.transaction('fonts', 'readwrite'); t.objectStore('fonts').put(v); t.oncomplete = res; t.onerror = rej; }); }, all() { return new Promise((res, rej) => { const q = this.db.transaction('fonts').objectStore('fonts').getAll(); q.onsuccess = () => res(q.result); q.onerror = rej; }); } };
+async function registerUploaded(family, label, buf) { const ff = new FontFace(family, buf); await ff.load(); document.fonts.add(ff); if (!UPLOADED.some(u => u.family === family)) UPLOADED.push({ id: 'u' + uid(), label, family, cat: '我的字体', stack: 'serif', weights: [400], lic: '用户上传，授权由你负责' }); }
+$('#fileFont').onchange = async e => {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  if (!/\.(ttf|otf|woff2?|)$/i.test(file.name)) return toast('仅支持 TTF / OTF / WOFF / WOFF2');
+  try { const buf = await file.arrayBuffer(); const family = 'My ' + file.name.replace(/\.[^.]+$/, '').replace(/[^\w一-龥-]+/g, ' ').trim().slice(0, 30);
+    await registerUploaded(family, file.name.replace(/\.[^.]+$/, ''), buf.slice(0)); try { await idb.open(); await idb.put({ family, label: file.name, buf }); } catch (er) { toast('字体已加载，但未能持久保存到浏览器'); }
+    const f = fdFont(); f.family = family; FD.cat = '我的字体'; commit(); renderFontDrawer(); needRender = true; toast('字体已加载：' + family);
+  } catch (er) { toast('字体文件无法解析：' + (er.message || er)); }
+};
+$('#bFont').onclick = () => openFontDrawer({});
+
+/* ---------------- colours ---------------- */
+let ORIG = {}; const CS = { scope: 'all', grad: false, sat: .78, lig: .66, seed: 3 };
+function snapOrig() { ORIG = {}; P.chars.forEach(c => ORIG[c.id] = deep(P.profiles[c.id].color)); }
+const _lp = loadProject; loadProject = (p, k) => { _lp(p, k); snapOrig(); };
+const myPalettes = () => { try { return JSON.parse(localStorage.getItem('trace.palettes') || '{}'); } catch (e) { return {}; } };
+function targets() { return CS.scope === 'all' ? P.chars.filter(c => !P.profiles[c.id].colorLocked) : (selCh() && !selPr().colorLocked ? [selCh()] : []); }
+function applyColors(list) { const ts = targets(); if (!ts.length) return toast('没有可修改的角色（颜色可能已锁定）'); ts.forEach((c, i) => applyPaletteTo(P.profiles[c.id], list[i % list.length], CS.grad)); commit(); }
+function renderColorDrawer() {
+  const d = $('#dColor'), sv = myPalettes(), cur = P.chars.map(c => rgb2hex(...lineRgb(P.profiles[c.id])));
+  const pal = (n, cols, act) => `<div class="pal" data-act="${act}" data-n="${esc(n)}"><div>${cols.map(c => `<i style="background:${c}"></i>`).join('')}</div><small>${esc(n)}</small></div>`;
+  d.innerHTML = dHead('配色系统') + `<div class="dbody">
+  <div class="card"><h4>应用范围</h4><div class="seg"><button class="${CS.scope === 'all' ? 'on' : ''}" data-act="csScope" data-s="all">全部角色</button><button class="${CS.scope === 'one' ? 'on' : ''}" data-act="csScope" data-s="one">仅当前角色${selCh() ? '（' + esc(selCh().name) + '）' : ''}</button></div>
+   <label class="row small"><input type="checkbox" id="csGrad" ${CS.grad ? 'checked' : ''}>同时生成沿轨迹渐变（2 色）</label><div class="small mut">已锁定颜色的角色不会被批量修改。</div></div>
+  <div class="card"><h4>预设配色（点击应用）</h4><div class="palgrid">${Object.entries(PALETTES).map(([n, c]) => pal(n, c, 'csPal')).join('')}</div></div>
+  <div class="card"><h4>智能配色</h4>${`<label class="f"><span>饱和度</span><input type="range" id="csSat" min=".3" max="1" step=".02" value="${CS.sat}"><b>${CS.sat}</b></label><label class="f"><span>明度</span><input type="range" id="csLig" min=".5" max=".85" step=".01" value="${CS.lig}"><b>${CS.lig}</b></label>`}
+   <div class="seg"><button data-act="csSmart">黄金角和谐配色</button><button data-act="csRandom">随机配色</button><button data-act="csHarm">以当前角色为基色生成邻近色</button></div></div>
+  <div class="card"><h4>当前配色 · 点色块可复制</h4><div class="seg">${cur.map((c, i) => `<button data-act="csCopyOne" data-c="${c}" style="background:${c};color:#000;min-width:34px" title="${esc(P.chars[i].name)} ${c}">&nbsp;</button>`).join('')}</div>
+   <div class="row"><input type="text" id="csText" style="flex:1" placeholder="#ff8a4f #4fd0ff …"><button data-act="csPaste">从文本应用</button><button data-act="csCopy">复制全部</button></div>
+   <div class="row"><input type="text" id="csName" style="flex:1" placeholder="配色方案名称"><button data-act="csSave">保存当前配色</button></div>
+   ${Object.keys(sv).length ? `<div class="palgrid">${Object.entries(sv).map(([n, c]) => pal(n, c, 'csMine')).join('')}</div>` : ''}</div>
+  <div class="card"><h4>批量调节（全部未锁定角色）</h4>
+   <label class="f"><span>发光强度</span><input type="range" min="0" max="2" step=".05" value="0.8" data-bulk="glow.intensity"><b></b></label>
+   <label class="f"><span>线条粗细</span><input type="range" min="1" max="8" step=".1" value="2.4" data-bulk="line.width"><b></b></label>
+   <label class="f"><span>拖尾长度</span><input type="range" min="1" max="20" step=".5" value="6" data-bulk="tail.len"><b></b></label>
+   <label class="f"><span>粒子密度</span><input type="range" min="0" max="3" step=".1" value="1" data-bulk="particles.density"><b></b></label>
+   <button data-act="csRestore">恢复打开项目时的颜色</button></div></div>`;
+  $('#csGrad').onchange = e => { CS.grad = e.target.checked; };
+  $('#csSat').oninput = e => { CS.sat = +e.target.value; e.target.nextElementSibling.textContent = CS.sat; }; $('#csLig').oninput = e => { CS.lig = +e.target.value; e.target.nextElementSibling.textContent = CS.lig; };
+  $$('[data-bulk]', d).forEach(el => { el.oninput = () => { const k = el.dataset.bulk; el.nextElementSibling.textContent = el.value; P.chars.forEach(c => { const pr = P.profiles[c.id]; if (k === 'glow.intensity' || k === 'line.width' || k === 'tail.len' || k === 'particles.density') setp(pr, k, +el.value); }); dirty(); }; el.onchange = () => commit(); });
+}
+Object.assign(ACTS, {
+  openColor: () => { renderColorDrawer(); openDrawer('dColor'); },
+  csScope: a => { CS.scope = a.dataset.s; renderColorDrawer(); },
+  csPal: a => applyColors(PALETTES[a.dataset.n]),
+  csMine: a => applyColors(myPalettes()[a.dataset.n]),
+  csSmart: () => { CS.seed += 1; applyColors(smartColors(Math.max(P.chars.length, 3), CS.seed, CS.sat, CS.lig)); renderColorDrawer(); },
+  csRandom: () => { const n = Math.max(P.chars.length, 3), a = []; for (let i = 0; i < n; i++) a.push(hsl2hex(Math.random() * 360, CS.sat * (.7 + Math.random() * .3), CS.lig * (.85 + Math.random() * .25))); applyColors(a); renderColorDrawer(); },
+  csHarm: () => { const base = selCh() ? lineRgb(selPr()) : [200, 200, 255], [h, s, l] = rgb2hsl(...base); const n = Math.max(P.chars.length, 3), a = []; for (let i = 0; i < n; i++) a.push(hsl2hex(h + (i - n / 2) * (60 / n * 2), clamp(s, .4, .95), clamp(l + (i % 2 ? .06 : -.04), .45, .85))); const t = CS.scope; CS.scope = 'all'; applyColors(a); CS.scope = t; renderColorDrawer(); },
+  csCopyOne: async a => { try { await navigator.clipboard.writeText(a.dataset.c); toast('已复制 ' + a.dataset.c); } catch (e) { $('#csText').value = a.dataset.c; $('#csText').select(); toast('请手动复制 ' + a.dataset.c); } },
+  csCopy: async () => { const t = P.chars.map(c => rgb2hex(...lineRgb(P.profiles[c.id]))).join(' '); $('#csText').value = t; try { await navigator.clipboard.writeText(t); toast('已复制全部颜色'); } catch (e) { $('#csText').select(); toast('请手动复制文本框内容'); } },
+  csPaste: () => { const l = ($('#csText').value.match(/#[0-9a-f]{6}/gi) || []); if (!l.length) return toast('未识别到 #rrggbb 颜色'); applyColors(l); renderColorDrawer(); },
+  csSave: () => { const n = ($('#csName').value || '').trim(); if (!n) return toast('请先输入方案名称'); const m = myPalettes(); m[n] = P.chars.map(c => rgb2hex(...lineRgb(P.profiles[c.id]))).slice(0, 12); try { localStorage.setItem('trace.palettes', JSON.stringify(m)); } catch (e) { return toast('无法保存'); } renderColorDrawer(); toast('已保存'); },
+  csRestore: () => { P.chars.forEach(c => { if (ORIG[c.id] && !P.profiles[c.id].colorLocked) { const pr = P.profiles[c.id]; pr.color = deep(ORIG[c.id]); const hex = pr.color.stops[pr.color.stops.length - 1].c; pr.glow.color = hex; pr.tail.color = hex; pr.particles.color = hex; } }); commit(); toast('已恢复'); },
+});
+$('#bColor').onclick = ACTS.openColor;
+
+/* ---------------- templates / projects ---------------- */
+function thumbOf(tpl) {
+  const cv = document.createElement('canvas'); cv.width = 320; cv.height = 180; const Pt = tpl.build(); const L2 = makeLayers(320, 180); const c = cv.getContext('2d', { alpha: false });
+  const t = Pt.duration * (tpl.id === 'daomu' ? .72 : .66); const b = autoBounds(Pt); const cam = Pt.camera.follow ? cameraAt(Pt, t) : { cx: 960, cy: 540, zoom: 1 };
+  try { renderFrame(Pt, t, c, L2, { cam: tpl.id === 'daomu' ? cameraAt(Pt, 48) : cam }); } catch (e) { console.error(e); } return cv;
+}
+function renderTplDrawer() {
+  const d = $('#dTpl');
+  d.innerHTML = dHead('模板与项目') + `<div class="dbody"><div class="card"><h4>项目文件</h4><div class="row"><button data-act="projExport">导出项目配置 (.json)</button><button data-act="projImport">导入项目配置</button></div><div class="small mut">编辑内容会自动保存在浏览器中；用导出的 .json 可以备份、分享或在别的电脑继续编辑。自行上传的字体不包含在 .json 内，需在新环境重新上传。</div></div>
+  <div class="card"><h4>模板（点击载入，可用撤销返回当前项目）</h4><div class="tplgrid" id="tplgrid"></div></div></div>`;
+  const g = $('#tplgrid'); TEMPLATES.forEach(t => { const el = document.createElement('div'); el.className = 'tpl'; el.dataset.act = 'tplUse'; el.dataset.id = t.id; el.appendChild(thumbOf(t)); const info = document.createElement('div'); info.innerHTML = `<b>${esc(t.name)}</b><span>${esc(t.desc)}</span>`; el.appendChild(info); g.appendChild(el); });
+}
+Object.assign(ACTS, {
+  tplUse: a => { const t = TEMPLATES.find(x => x.id === a.dataset.id); loadProject(t.build()); setPlaying(false); closeDrawers(); toast('已载入模板：' + t.name); },
+  projExport: async () => { const data = JSON.stringify({ trace: 1, project: P, fonts: UPLOADED.map(f => f.family) }, null, 1); await saveFile((P.name || 'trace') + '.json', new Blob([data], { type: 'application/json' })); },
+  projImport: () => $('#fileProj').click(),
+});
+$('#fileProj').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; try { const o = JSON.parse(await f.text()); const p = o.project || o; if (!p.chars) throw new Error('不是有效的 TRACE 项目'); loadProject(p); closeDrawers(); toast('已导入：' + (p.name || '')); } catch (er) { toast('导入失败：' + er.message); } };
+$('#bTpl').onclick = () => { renderTplDrawer(); openDrawer('dTpl'); };
+
+/* ---------------- relations wizard ---------------- */
+const REL = { type: 'meet', a: null, b: [], t0: 6, t1: 12, gap: 16, lag: 1.5, evt: true };
+const REL_TYPES = [['meet', '相遇：两线靠近并交汇'], ['split', '分离：两线逐渐远离'], ['parallel', '平行：保持相近距离'], ['cross', '交错：两线交叉穿过'], ['merge', '汇合：多线汇集到一点'], ['fork', '分叉：一线分成多线'], ['follow', '追随：跟随另一条线'], ['fade', '消失：线条逐渐淡出'], ['solo', '独行：单线独自延伸']];
+function renderRelDrawer() {
+  const d = $('#dRel'); if (!REL.a || !charById(P, REL.a)) REL.a = sel || (P.chars[0] && P.chars[0].id); REL.b = REL.b.filter(id => charById(P, id) && id !== REL.a); if (!REL.b.length) { const o = P.chars.find(c => c.id !== REL.a); if (o) REL.b = [o.id]; }
+  const multi = REL.type === 'merge' || REL.type === 'fork', single = !multi;
+  d.innerHTML = dHead('轨迹关系向导') + `<div class="dbody"><div class="card"><h4>关系类型</h4><select id="rType">${REL_TYPES.map(([v, l]) => `<option value="${v}" ${REL.type === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+   <label class="f s"><span>${REL.type === 'fade' || REL.type === 'solo' ? '主角色' : '基准角色 A'}</span><select id="rA">${P.chars.map(c => `<option value="${c.id}" ${c.id === REL.a ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+   ${REL.type === 'fade' || REL.type === 'solo' ? '' : single ? `<label class="f s"><span>被调整角色 B</span><select id="rB">${P.chars.filter(c => c.id !== REL.a).map(c => `<option value="${c.id}" ${REL.b[0] === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>` : `<div class="small mut">选择参与的角色（可多选）：</div><div class="seg">${P.chars.filter(c => c.id !== REL.a).map(c => `<button data-act="relTog" data-id="${c.id}" class="${REL.b.includes(c.id) ? 'on' : ''}">${esc(c.name)}</button>`).join('')}</div>`}
+   <label class="f s"><span>开始时间</span><input type="number" id="rT0" step=".5" value="${REL.t0}"></label><label class="f s"><span>结束时间</span><input type="number" id="rT1" step=".5" value="${REL.t1}"></label>
+   ${['meet', 'split', 'parallel', 'cross', 'merge', 'fork'].includes(REL.type) ? `<label class="f"><span>线间距</span><input type="range" id="rGap" min="4" max="120" value="${REL.gap}"><b>${REL.gap}</b></label>` : ''}${REL.type === 'follow' ? `<label class="f"><span>落后秒数</span><input type="range" id="rLag" min=".5" max="5" step=".1" value="${REL.lag}"><b>${REL.lag}</b></label>` : ''}
+   ${['meet', 'split', 'cross', 'merge'].includes(REL.type) ? `<label class="f chk"><input type="checkbox" id="rEvt" ${REL.evt ? 'checked' : ''}><span>同时在交汇处添加事件节点</span></label>` : ''}
+   <div class="small mut">关系会改写 B 的控制点（可撤销）。时间轴上可继续微调。</div><button class="pri" data-act="relApply">应用</button></div></div>`;
+  $('#rType').onchange = e => { REL.type = e.target.value; renderRelDrawer(); }; $('#rA').onchange = e => { REL.a = e.target.value; renderRelDrawer(); };
+  const rb = $('#rB'); if (rb) rb.onchange = e => REL.b = [e.target.value];
+  $('#rT0').onchange = e => REL.t0 = +e.target.value; $('#rT1').onchange = e => REL.t1 = +e.target.value;
+  const g = $('#rGap'); if (g) g.oninput = e => { REL.gap = +e.target.value; e.target.nextElementSibling.textContent = REL.gap; }; const l = $('#rLag'); if (l) l.oninput = e => { REL.lag = +e.target.value; e.target.nextElementSibling.textContent = REL.lag; }; const ev = $('#rEvt'); if (ev) ev.onchange = e => REL.evt = e.target.checked;
+}
+Object.assign(ACTS, {
+  openRel: () => { if (P.chars.length < 2) return toast('至少需要两个角色'); REL.t0 = +T.toFixed(1); REL.t1 = +Math.min(P.duration, T + 6).toFixed(1); renderRelDrawer(); openDrawer('dRel'); },
+  relTog: a => { const i = REL.b.indexOf(a.dataset.id); i >= 0 ? REL.b.splice(i, 1) : REL.b.push(a.dataset.id); renderRelDrawer(); },
+  relApply: () => {
+    const A = charById(P, REL.a); if (!A) return; const ty = REL.type, evs = { meet: '初次相遇', split: '分道扬镳', cross: '命运交织', merge: '命运交织' };
+    if (ty === 'fade') { A.end = { type: 'fade', ts: REL.t0, te: REL.t1, ret: [] }; commit(); closeDrawers(); return toast('已设置渐隐'); }
+    if (ty === 'solo') { A.style = 'curve'; commit(); closeDrawers(); return toast('已设为独行'); }
+    if (!REL.b.length) return toast('请选择被调整的角色'); if (REL.t1 <= REL.t0) return toast('结束时间需大于开始时间');
+    REL.b.forEach((id, i) => {
+      const gap = ty === 'merge' ? i * 8 : ty === 'fork' ? ((i % 2 ? -1 : 1) * (Math.floor(i / 2) + 1) * Math.max(REL.gap, 30)) : REL.gap;
+      const type = ty === 'merge' ? 'meet' : ty === 'fork' ? 'split' : ty;
+      const r = applyRelation(P, { type, a: REL.a, b: id, t0: REL.t0, t1: REL.t1, gap, lag: REL.lag });
+      if (REL.evt && evs[ty] && i === 0) P.events.push({ id: uid(), charId: id, t: ty === 'split' ? REL.t0 : ty === 'cross' ? +((REL.t0 + REL.t1) / 2).toFixed(1) : REL.t1, dur: 3.5, kind: 'ring', text: evs[ty], time: '' });
+    });
+    commit(); setT(REL.t0); closeDrawers(); toast('关系已应用，按空格预览');
+  },
+});
+
+/* ---------------- export ---------------- */
+const XS = { format: 'mp4', res: '1080p', fps: 30, aspect: 'project', cw: 16, ch: 9, dur: null, bgOn: false, bg: '#000000', ctrl: null, result: null, busy: false, support: '' };
+function renderExport() {
+  const b = $('#xbox'); if (XS.dur == null) XS.dur = P.duration;
+  const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${XS[k] == v ? 'on' : ''}" data-act="xSet" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
+  b.innerHTML = `<header style="display:flex;align-items:center;padding:10px 14px;gap:8px"><h3>导出视频</h3><button data-act="xClose">关闭 ✕</button></header>
+  <div class="mbody"><div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+   <div class="card"><h4>格式</h4>${seg('format', [['mp4', 'MP4 (H.264)'], ['webm', 'WebM (VP9)']])}<div class="small mut" id="xsup">${esc(XS.support)}</div></div>
+   <div class="card"><h4>分辨率 / 帧率</h4>${seg('res', [['720p', '720P'], ['1080p', '1080P'], ['2k', '2K'], ['4k', '4K']])}${seg('fps', [[30, '30 FPS'], [60, '60 FPS']])}<div class="small mut">4K / 60FPS 渲染较慢，且需要设备编码器支持。</div></div>
+   <div class="card"><h4>画幅</h4>${seg('aspect', [['project', '与项目一致'], ['16:9', '16:9'], ['9:16', '9:16'], ['1:1', '1:1'], ['4:3', '4:3'], ['custom', '自定义']])}${XS.aspect === 'custom' ? `<div class="row small">宽比<input type="number" id="xcw" value="${XS.cw}" min="1" max="50">高比<input type="number" id="xch" value="${XS.ch}" min="1" max="50"></div>` : ''}</div>
+   <div class="card"><h4>时长 / 背景</h4><div class="row small">时长<input type="number" id="xdur" value="${XS.dur}" min="1" max="300" step="1">秒（项目总时长 ${P.duration}s）</div><label class="row small"><input type="checkbox" id="xbgOn" ${XS.bgOn ? 'checked' : ''}>覆盖为纯色背景<input type="color" id="xbg" value="${XS.bg}"></label>
+   <div class="small mut">墓碑 / 门 / 事件 / 姓名 / 粒子 / 文字图层 的显示开关在右侧“轨迹”页的“场景效果”。导出无水印。</div></div></div>
+  <div style="display:flex;flex-direction:column;gap:10px;min-width:0"><div class="card"><h4>预览（所见即导出）</h4><canvas id="xprev"></canvas><input type="range" id="xt" min="0" max="${P.duration}" step=".1" value="${Math.min(T, P.duration)}"></div>
+   <div class="card"><div class="prog"><i id="xbar"></i></div><div class="small mut" id="xmsg">${XS.result ? '' : '准备就绪'}</div>
+   <div class="row" id="xbtns">${XS.busy ? '<button class="dng" data-act="xCancel">取消</button>' : '<button class="pri" data-act="xStart">开始导出</button>'}</div>
+   <div id="xres"></div></div></div></div>`;
+  $('#xcw') && ($('#xcw').onchange = e => { XS.cw = clamp(+e.target.value || 16, 1, 50); drawXPrev(); }); $('#xch') && ($('#xch').onchange = e => { XS.ch = clamp(+e.target.value || 9, 1, 50); drawXPrev(); });
+  $('#xdur').onchange = e => { XS.dur = clamp(+e.target.value || P.duration, 1, 300); }; $('#xbgOn').onchange = e => { XS.bgOn = e.target.checked; drawXPrev(); }; $('#xbg').oninput = e => { XS.bg = e.target.value; drawXPrev(); };
+  $('#xt').oninput = drawXPrev; drawXPrev(); checkSupport(); if (XS.result) showResult();
+}
+function xAspect() { return XS.aspect === 'project' ? [P.w, P.h] : XS.aspect === 'custom' ? [XS.cw, XS.ch] : XS.aspect.split(':').map(Number); }
+function xProject() { const Q = deep(P), [aw, ah] = xAspect(); if (aw >= ah) { Q.w = 1920; Q.h = Math.round(1920 * ah / aw); } else { Q.h = 1920; Q.w = Math.round(1920 * aw / ah); } Q.w += Q.w & 1; Q.h += Q.h & 1; if (XS.bgOn) Q.bg = { mode: 'solid', c1: XS.bg, c2: XS.bg }; return Q; }
+function drawXPrev() {
+  const cv = $('#xprev'); if (!cv) return; const Q = xProject(), w = 520, h = Math.round(520 * Q.h / Q.w); cv.width = w; cv.height = h; cv.style.aspectRatio = Q.w + '/' + Q.h; cv.style.maxHeight = '300px'; cv.style.objectFit = 'contain';
+  const t = +($('#xt') || { value: 0 }).value; const c = cv.getContext('2d', { alpha: false }); const L2 = makeLayers(w, h);
+  // camera: in export, same camera as final video unless frame doesn't follow anything
+  renderFrame(Q, t, c, L2, {});
+}
+async function checkSupport() {
+  const el = $('#xsup'); if (!el) return; const [W, H] = exportDims(xProject(), XS.res, null); const br = Math.round(W * H * XS.fps * .16);
+  let msg; if (typeof VideoEncoder === 'undefined') msg = '⚠ 本浏览器无 WebCodecs，将使用实时录制兼容模式（耗时等于动画时长）。建议使用最新版 Chrome / Edge。'; else { const p = await pickCodec(XS.format, W, H, XS.fps, br); msg = p ? `✓ 逐帧编码可用 · ${p.codec} · ${W}×${H}` + (XS.format === 'mp4' && p.container !== 'mp4' ? '' : '') : (XS.format === 'mp4' ? '⚠ 本机无 H.264 编码器，将自动改用 WebM(VP9)导出。' : '⚠ 本机不支持 VP9 编码，将使用兼容模式。'); }
+  XS.support = msg; const e2 = $('#xsup'); if (e2) e2.textContent = msg;
+}
+Object.assign(ACTS, {
+  xSet: a => { const k = a.dataset.k, v = a.dataset.v; XS[k] = (k === 'fps') ? +v : v; renderExport(); },
+  xClose: () => { if (XS.busy && XS.ctrl) XS.ctrl.abort(); $('#mExport').classList.remove('open'); },
+  xCancel: () => { XS.ctrl && XS.ctrl.abort(); },
+  xStart: async () => {
+    if (XS.busy) return; XS.busy = true; XS.result = null; XS.ctrl = new AbortController(); setPlaying(false); renderExport();
+    const bar = () => $('#xbar'), msg = () => $('#xmsg'); const Q = xProject();
+    try {
+      const r = await exportVideo(Q, { format: XS.format, res: XS.res, fps: XS.fps, duration: XS.dur, signal: XS.ctrl.signal, onProgress: (f, m) => { if (bar()) bar().style.width = (f * 100).toFixed(1) + '%'; if (msg()) msg().textContent = m; } });
+      XS.result = r; XS.busy = false; renderExport();
+    } catch (e) { XS.busy = false; renderExport(); const m = $('#xmsg'); if (m) m.textContent = e.cancelled ? '已取消。' : '导出失败：' + (e.message || e) + '（可点击“重新导出”重试）'; const b = $('#xbtns'); if (b) b.innerHTML = '<button class="pri" data-act="xStart">重新导出</button>'; console.error(e); }
+  },
+  xSave: async () => { const r = XS.result; if (!r) return; await saveFile((P.name || 'trace') + '.' + r.ext, r.blob); },
+});
+function showResult() {
+  const r = XS.result, el = $('#xres'); if (!el) return; const url = URL.createObjectURL(r.blob); XS.url && URL.revokeObjectURL(XS.url); XS.url = url;
+  $('#xbar').style.width = '100%'; $('#xmsg').textContent = `完成 · ${r.w}×${r.h} · ${r.fps}fps · ${(r.blob.size / 1048576).toFixed(1)} MB · ${r.ext.toUpperCase()}${r.note ? '\n' + r.note : ''}`;
+  el.innerHTML = `<video id="xvideo" src="${url}" controls playsinline></video><div class="row"><button class="pri" data-act="xSave">保存到本地</button><button data-act="xStart">重新导出</button></div><div class="small mut">${r.ext === 'webm' && XS.format === 'mp4' ? '注意：本机没有 H.264 编码器，已自动导出为 WebM。' : ''}若预览无法播放，仍可先保存再用播放器打开。</div>`;
+  $('#xbtns').innerHTML = '';
+}
+$('#bExport').onclick = () => { XS.result = null; XS.dur = P.duration; renderExport(); $('#mExport').classList.add('open'); };
+$('#mExport').addEventListener('pointerdown', e => { if (e.target.id === 'mExport' && !XS.busy) $('#mExport').classList.remove('open'); });
+
+/* ---------------- bootstrap ---------------- */
+(async function boot() {
+  loadGoogleFonts();
+  try { await idb.open(); const fs = await idb.all(); for (const f of fs) { try { await registerUploaded(f.family, f.label.replace(/\.[^.]+$/, ''), f.buf.slice(0)); } catch (e) { } } } catch (e) { }
+  let restored = false;
+  try { const s = JSON.parse(localStorage.getItem('trace.autosave') || 'null'); if (s && s.P && s.P.chars && s.P.chars.length) { loadProject(s.P, s.sel); restored = true; toast('已恢复上次编辑的项目（自动保存）'); } } catch (e) { }
+  if (!restored) loadProject(TEMPLATES[0].build());
+  resizeStage(); fitView(); snapOrig(); hist.length = 0; hi = -1; commit(true); setMode('sel');
+  requestAnimationFrame(t => { lastTs = t; frame(t); });
+  window.__trace = { get P() { return P; }, setT, T: () => T };
+})();
+
+</script></body></html>
